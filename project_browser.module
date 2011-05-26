@@ -1,0 +1,152 @@
+<?php
+
+// $Id$
+/**
+ * @file
+ * Project Browser module.
+ * @author Leighton Whiting
+ */
+
+/**
+ * Display help and module information
+ */
+function project_browser_help($path, $arg) {
+  $output = '';
+  switch ($path) {
+    case "admin/help#project_browser":
+      $output .= '<p>'.  t("Provides a UI for users to browse for and install new modules and themes from
+      within their Drupal admin interface.") .'</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function project_browser_permission() {
+  return array(
+    'use project browser' => array(
+      'title' => t('Use Project Browser'),
+      'description' => t('This allows the user to browse for and install new modules and themes using Project Browser.'),
+      'restrict access' => TRUE,
+    )
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function project_browser_menu() {
+  $items = array();
+  $items['project_browser'] = array(
+    'description' => 'A page where users can browse for modules and add them to an install queue.',
+    'page callback' => 'project_browser_browser_page',
+    'access arguments' => array('use project browser'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/project_browser'] = array(
+    'title' => 'Project Browser Settings',
+    'description' => 'Set the various Project Browser Settings here',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('project_browser_admin'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+// ======================================
+// Administration Page:
+// ======================================
+
+/**
+ * Admin Settings Form
+ */
+function project_browser_admin() {
+  $form['main'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Main Settings'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    );
+  $form['main']['project_browser_servers'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Servers'),
+    '#default_value' => variable_get('project_browser_servers', ''),
+    '#description' => t("Add new servers to use for the Project Browser, one per line, in 
+      the 'url|Server Name' format. Drupal.org is added by default, and doesn't need to be 
+      set here."),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+// ======================================
+// Pages:
+// ======================================
+
+/**
+ * A page where the user can browse modules and themes, and add them to an install queue
+ */
+function project_browser_browser_page() {
+	// TODO - Finish this
+}
+
+// ======================================
+// Functions:
+// ======================================
+
+/**
+ * Fetches results from the servers based on the parameters passed in
+ * 
+ * @param $filters
+ *   An associative array of queries to use to filter results
+ * @return array
+ *   Returns an array of results
+ */
+function project_browser_fetch_results($filters) {
+	$servers = project_browser_get_servers();
+	
+	$results = array();
+	
+	foreach ($servers as $url => $name) {
+		$results_raw = xmlrpc($url, array(
+	    'project_browser_server.fetch_results' => array($filters),
+	  ));
+	  
+	  // Check for errors
+	  $error = xmlrpc_error();
+	  if ($error->is_error) {
+	  	drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
+	  	  array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
+	  	continue;
+	  }
+	  
+	  if (is_array($results_raw) AND !empty($results_raw)) {
+		  // Merge the results
+		  $results = array_merge($results, $results_raw);
+	  }
+	}
+  
+  return $results;
+}
+
+/**
+ * Gets the servers to use for fetching results
+ * 
+ * @return array
+ *   Returns an associative array of servers, populated from the project_browser_servers variable, 
+ *   in 'url => name' format
+ */
+function project_browser_get_servers() {
+	$servers = array(
+    'http://www.drupal.org/xmlrpc.php' => 'Drupal.org',
+	);
+	if (variable_get('project_browser_servers', '')) {
+		// TODO - Process the variable and add the servers to the list
+	}
+	
+	return $servers;
+}
