@@ -5,6 +5,9 @@
  * @file
  * Project Browser module.
  * Authored by Leighton Whiting for Google Summer of Code 2011
+ * 
+ * This module will provide a new UI for admins to easily browse modules and themes from their
+ * admin pages, and install them.
  */
 
 /**
