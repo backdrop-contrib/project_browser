@@ -42,12 +42,6 @@ function project_browser_permission() {
  */
 function project_browser_menu() {
   $items = array();
-  $items['project_browser'] = array(
-    'description' => 'A page where users can browse for modules and add them to an install queue.',
-    'page callback' => 'project_browser_browser_page',
-    'access arguments' => array('use project browser'),
-    'type' => MENU_CALLBACK,
-  );
   $items['admin/settings/project_browser'] = array(
     'title' => 'Project Browser Settings',
     'description' => 'Set the various Project Browser Settings here',
@@ -116,98 +110,32 @@ function project_browser_admin() {
 }
 
 // ======================================
-// Pages:
+// Theme:
 // ======================================
 
 /**
- * A page where the user can browse modules and themes, and add them to an install queue
+ * Implements hook_theme() 
  */
-function project_browser_browser_page() {
-	// TODO - Finish this
-}
-
-// ======================================
-// Functions:
-// ======================================
-
-/**
- * Fetches results from the servers based on the parameters passed in
- * 
- * $filters should be an associative array with the following keys:
- * array(
- *   'drupal_version' => '6.x', // The Major Version of Drupal that is running on the Client
- *   'text' => 'Views', // The text that was entered as the search query, or 'all'
- *   'type' => 'module', // The type of project being searched
- * )
- * 
- * The project_browser_fetch_results($filters) call returns an array like this:
- * 
- * array(
- *   'views' => array( // The key is the project (unique) shortname
- *     'type' => 'module', // The type of project this is. Can be 'module' or 'theme'
- *     'title' => 'Views',
- *     'short_name' => 'views',
- *     'author' => 'merlinofchaos',
- *     'description' => "Long project description ...",
- *     'image' => 'http://www.example.com/image.jpg', // Absolute url to the image, if any
- *     'usage' => '542312', // How many Downloads the module has had
- *     'project_url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
- *     'update_url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
- *     'last_updated' => '12342523', // UNIX Timestamp of when the project was last updated
- *     'rating' => '9.6', // A rating on a scale of 1 to 10 of the project, if available
- *     'dependencies' => array( // An array of the dependencies of this module
- *         'ctools',
- *       ),
- *   ),
- *   'short_name_2 => array( ... ),
- * );
- * 
- * @param $filters
- *   An associative array of queries to use to filter results
- * @return array
- *   Returns an array of results
- */
-function project_browser_fetch_results($filters) {
-	$servers = project_browser_get_servers();
-	
-	$results = array();
-	
-	foreach ($servers as $url => $name) {
-		$results_raw = xmlrpc($url, array(
-	    'project_browser_server.fetch_results' => array($filters),
-	  ));
-	  
-	  // Check for errors
-	  $error = xmlrpc_error();
-	  if ($error->is_error) {
-	  	drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
-	  	  array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
-	  	continue;
-	  }
-	  
-	  if (is_array($results_raw) AND !empty($results_raw)) {
-		  // Merge the results
-		  $results = array_merge($results, $results_raw);
-	  }
-	}
-  
-  return $results;
+function project_browser_theme() {
+  return array(
+    //Template for list of projects
+    'project_browser_list' => array(
+      'variables' => array('projects_list' => NULL),
+      'file' => 'project_browser.pages.inc',
+      'template' => 'project_browser_list',
+    ),
+    // Template for single project
+    'project_browser_project' => array(
+      'variables' => array('project' => NULL),
+      'file' => 'project_browser.pages.inc',
+      'template' => 'project_browser_project',
+    ),
+  );
 }
 
 /**
- * Gets the servers to use for fetching results
- * 
- * @return array
- *   Returns an associative array of servers, populated from the project_browser_servers variable, 
- *   in 'url => name' format
+ * Implements hook_dashboard_regions()
  */
-function project_browser_get_servers() {
-	$servers = array(
-    'http://www.drupal.org/xmlrpc.php' => 'Drupal.org',
-	);
-	if (variable_get('project_browser_servers', '')) {
-		// TODO - Process the variable and add the servers to the list
-	}
-	
-	return $servers;
+function project_browser_dashboard_regions() {
+  return array('project_browser_sidebar_right' => 'Right sidebar for project browser page');
 }
