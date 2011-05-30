@@ -53,6 +53,8 @@ function project_browser_page($type) {
  *    Operation to preform.
  */
 function project_browser_installation_page($op) {
+  drupal_add_css(drupal_get_path('module', 'project_browser') . '/project_browser.css', array('preprocess' => FALSE));
+  
   switch ($op) {
     case 'select_versions':
       $content = project_browser_installation_select_versions_page();
