@@ -74,12 +74,22 @@ function project_browser_menu() {
   $items['admin/project_browser/install/%'] = array(
     'title' => 'Install',
     'page callback' => 'project_browser_installation_page',
-    'page arguments' => array(2, 3),
+    'page arguments' => array(3),
     'access arguments' => array('use project browser'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'project_browser.pages.inc',
   );
   return $items;
+}
+
+/**
+ * Implements hook_dashboard_regions()
+ */
+function project_browser_dashboard_regions() {
+  return array(
+    'project_browser_sidebar_right' => 'Right sidebar for project browser page',
+    'project_browser_sidebar_left' => 'Left sidebar for project installation page',
+  );
 }
 
 // ======================================
@@ -134,8 +144,76 @@ function project_browser_theme() {
 }
 
 /**
- * Implements hook_dashboard_regions()
+ * Theme the list of projects.
+ * 
+ * @param $variables
+ *    An associative array containing:
+ *     - projects_list : array of all projects
+ *     
+ * @return
+ *    A string containing the listing output.
  */
-function project_browser_dashboard_regions() {
-  return array('project_browser_sidebar_right' => 'Right sidebar for project browser page');
+function template_preprocess_project_browser_list(&$variables) {
+  include_once(drupal_get_path('module', 'project_browser') . '/project_browser.inc');
+  
+  // Add the themed list
+  $variables['list'] = '';
+  
+  // Theme each individual project and add to the list
+  foreach ($variables['projects_list'] as $project) {
+    $variables['list'] .= theme('project_browser_project', array('project' => $project));
+  }
+  
+  // Add the pager
+  $variables['pager'] = theme('pager', array('tags' => NULL));
+  
+  // Add the filters
+  $search_form = drupal_get_form('project_browser_text_filter_form');
+  $filters = drupal_render($search_form);
+  
+  // Add the available category to filter on
+  $category_form = drupal_get_form('project_browser_category_filter_form');
+  $filters .= drupal_render($category_form); 
+  
+  // Add the sorting of the list
+  $filters .= project_browser_sort_list();
+  $variables['filters'] = $filters;
+  
+  // Add the install list
+  $variables['install_list'] = project_browser_get_install_list();
+}
+
+/**
+ * Theme one project.
+ * 
+ * @param $variables
+ *   An associative array containing:
+ *     - project : associative array of project variables
+ *     
+ * @return
+ *   A string containing the listing output.
+ */
+function template_preprocess_project_browser_project(&$variables) {
+  include_once(drupal_get_path('module', 'project_browser') . '/project_browser.inc');
+  
+  $project = $variables['project'];
+  
+  $variables['title'] = l(check_plain($project['title']), check_url($project['project_url']));
+  $variables['description'] = $project['description'];
+  
+  // Check if the project is installed
+  if (_project_browser_is_project_enabled($project['type'], $project['short_name'])) {
+    $variables['status'] = '<div class="install-disabled">Already installed</div>'; 
+    $variables['install'] = '';
+  }
+  elseif (drupal_get_filename($project['type'], $project['short_name'])) {
+    $variables['status'] = '<div class="install-disabled">Already downloaded</div>';
+    $variables['install'] = '';
+    // TODO - We should offer a 'remove' option to delete the project from the file system
+  }
+  else {
+    $variables['status'] = '<div class="install-enabled">Install</div>';
+    $install_form = drupal_get_form('project_browser_' . $project['short_name'] . '_install_form', $project->pid);
+    $variables['install'] = drupal_render($install_form);
+  }
 }

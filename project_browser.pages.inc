@@ -42,38 +42,105 @@ function project_browser_page($type) {
   return theme('project_browser_list', array('projects_list' => $list));
 }
 
+// ======================================
+// Installation Page:
+// ======================================
+
 /**
- * Page to install a module
+ * Page to install projects
  * 
  * @param string $op
  *    Operation to preform.
- * @param integer $pid
- *    Project ID
  */
 function project_browser_installation_page($op) {
+  project_browser_installation_task_list($op);
   switch ($op) {
+    case 'select_versions':
+      project_browser_installation_select_versions_page();
+      break;
+    case 'backup':
+      project_browser_installation_backup_page();
+      break;
     case 'install':
-      include_once (drupal_get_path('module', 'update') . '/update.manager.inc' );
-      
-      $queued_releases = project_browser_get_install_list();
-      
-      $operations = array();
-      foreach ($queued_releases as $release) {
-        $operations[] = array('_project_browser_batch_install_release', array($release));
-      }
-      $batch = array(
-        'operations' => $operations,
-        'finished' => '_project_browser_batch_install_releases_finished',
-        'title' => t('Installing projects'),
-        'init_message' => t('Beginning the install process.'),
-        'progress_message' => t('Installed @current out of @total.'),
-        'error_message' => t('Installation has encountered an error.'),
-      );
-      batch_set($batch);
-      
-      drupal_goto('admin/project_browser');
+      project_browser_installation_install_page();
+      break;
+    case 'finished':
+      project_browser_installation_enable_page();
       break;
   }
+}
+
+/**
+ * Task page for the Select versions installation task
+ * 
+ * Shows a form where the user can select which versions to install for each 
+ * project
+ */
+function project_browser_installation_select_versions_page() {
+  // TODO - Show a form that lets the user select which version of the projects to install
+}
+
+/**
+ * Task page for the Backup site installation task
+ * 
+ * Creates a backup of the database and lets the user download the file
+ */
+function project_browser_installation_backup_page() {
+  // TODO - Implement this
+}
+
+/**
+ * Task page for the Install Projects installation task
+ * 
+ * Starts a batch install process of the projects
+ */
+function project_browser_installation_install_page() {
+  include_once (drupal_get_path('module', 'update') . '/update.manager.inc' );
+  
+  $queued_releases = project_browser_get_install_list();
+  
+  $operations = array();
+  foreach ($queued_releases as $release) {
+    $operations[] = array('_project_browser_batch_install_release', array($release));
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => '_project_browser_batch_install_releases_finished',
+    'title' => t('Installing projects'),
+    'init_message' => t('Beginning the install process.'),
+    'progress_message' => t('Installed @current out of @total.'),
+    'error_message' => t('Installation has encountered an error.'),
+  );
+  batch_set($batch);
+}
+
+/**
+ * Task page for the Enable projects installation task
+ * 
+ * Show a form which lets the user enable the newly installed projects
+ */
+function project_browser_installation_enable_page() {
+  // TODO - Implement this
+}
+
+/**
+ * Add a task list to the sidebar area when installing projects
+ * 
+ * This will need to be called from every page of the install process
+ * 
+ * @param $active
+ *   (Optional) Set the active task by key
+ */
+function project_browser_installation_task_list($active = NULL) {
+  // Default list of tasks.
+  $tasks = array(
+    'select_versions' => t('Select versions'),
+    'backup' => t('Backup site'),
+    'install' => t('Install projects'),
+    'enable' => t('Enable projects'),
+  );
+
+  drupal_add_region_content('sidebar_first', theme('task_list', array('items' => $tasks, 'active' => $active)));
 }
 
 /**
@@ -118,78 +185,6 @@ function _project_browser_batch_install_releases_finished($success, $results, $o
     $message = t('Finished with an error.');
   }
   drupal_set_message($message);
-}
-
-/**
- * Theme the list of projects.
- * 
- * @param $variables
- *    An associative array containing:
- *     - projects_list : array of all projects
- *     
- * @return
- *    A string containing the listing output.
- */
-function template_preprocess_project_browser_list(&$variables) {
-  include_once(drupal_get_path('module', 'project_browser') . '/project_browser.inc');
   
-  // Add the themed list
-  $variables['list'] = '';
-  
-  // Theme each individual project and add to the list
-  foreach ($variables['projects_list'] as $project) {
-    $variables['list'] .= theme('project_browser_project', array('project' => $project));
-  }
-  
-  // Add the pager
-  $variables['pager'] = theme('pager', array('tags' => NULL));
-  
-  // Add the filters
-  $version_form = drupal_get_form('project_browser_version_filter_form');
-  $filters = drupal_render($version_form);
-  
-  // Add the available category to filter on
-  $category_form = drupal_get_form('project_browser_category_filter_form');
-  $filters .= drupal_render($category_form); 
-  
-  // Add the sorting of the list
-  $filters .= project_browser_sort_list();
-  $variables['filters'] = $filters;
-  
-  // Add the install list
-  $variables['install_list'] = project_browser_get_install_list();
-}
-
-/**
- * Theme one project.
- * 
- * @param $variables
- *   An associative array containing:
- *     - project : associative array of project variables
- *     
- * @return
- *   A string containing the listing output.
- */
-function template_preprocess_project_browser_project(&$variables) {
-  include_once(drupal_get_path('module', 'project_browser') . '/project_browser.inc');
-  
-  $project = $variables['project'];
-  
-  $variables['title'] = l(check_plain($project['title']), check_url($project['project_url']));
-  $variables['description'] = $project['description'];
-  
-  // Check if the project is installed
-  if (module_exists($project->short_name)) {
-    $variables['status'] = '<div class="install-disabled">Already installed</div>'; 
-    $variables['install'] = '';
-  }
-  elseif (FALSE) { // TODO - Add a check to see if the project is downloaded or not
-    $variables['status'] = '<div class="install-disabled">Already downloaded</div>';
-    $variables['install'] = '';
-  }
-  else {
-    $variables['status'] = '<div class="install-enabled">Install</div>';
-    $install_form = drupal_get_form('project_browser_' . $project->short_name . '_install_form', $project->pid);
-    $variables['install'] = drupal_render($install_form);
-  }
+  drupal_goto('admin/project_browser/install/enable');
 }

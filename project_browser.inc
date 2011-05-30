@@ -57,6 +57,7 @@ function project_browser_category_filter_form($form, &$form_state) {
   $form['category'] = array(
     '#type' => 'fieldset',
     '#title' => t('Category'),
+    '#tree' => TRUE,
     '#collapsible' => FALSE,
   );
   
@@ -83,16 +84,37 @@ function project_browser_category_filter_form($form, &$form_state) {
  * Submit handler for setting filter
  */
 function project_browser_category_filter_form_submit($form, &$form_state) {
-  if ($form_state['submitted']) {
-    // TODO - Use tree to constrain this to a set variable parent
-    $protected = array('submit', 'form_build_id', 'form_token', 'form_id', 'op');
-    foreach ($form_state['values'] as $key => $value) {
-      if (!in_array($key, $protected)) {
-        $session_key = str_replace('_', ' ', $key);
-        $_SESSION['project_browser_category'][$session_key] = $value;
-      }
-    }
-  }
+  $_SESSION['project_browser_category'][$session_key] = $form_state['values']['category'];
+}
+
+/**
+ * Form to let user search for text
+ */
+function project_browser_text_filter_form($form, &$form_state) {
+  $categories = project_browser_get_categories();
+  $form['search'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Search'),
+    '#collapsible' => FALSE,
+  );
+  $form['search']['search_text'] = array(
+    '#type' => 'textbox',
+    '#title' => t('Search String'),
+    '#default_value' => isset($_SESSION['project_browser_text_filter']) ? $_SESSION['project_browser_text_filter'] : '',
+  );
+  $form['search']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter'),
+  );
+  
+  return $form;
+}
+
+/**
+ * Submit handler for setting filter
+ */
+function project_browser_text_filter_form_submit($form, &$form_state) {
+  $_SESSION['project_browser_category'][$session_key] = $value;
 }
 
 /**
@@ -146,6 +168,29 @@ function _project_browser_string_to_array($string) {
   }
   
   return $values;
+}
+
+/**
+ * Helper function to check if a project is enabled
+ * 
+ * @param $type
+ *   The type of project. Could be 'theme' or 'module'
+ * @param $short_name
+ *   The short name of the project
+ * @return bool
+ *   TRUE if the project is enabled, FALSE otherwise
+ */
+function _project_browser_is_project_enabled($type, $short_name) {
+  switch ($type) {
+    case 'module':
+      return module_exists($short_name);
+      break;
+    case 'theme':
+      $themes = list_themes();
+      return isset($themes[$short_name]);
+      break;
+  }
+  return FALSE;
 }
 
 // ======================================
