@@ -48,13 +48,42 @@ function project_browser_menu() {
     'access arguments' => array('use project browser'),
     'type' => MENU_CALLBACK,
   );
-  $items['admin/project_browser'] = array(
+  $items['admin/settings/project_browser'] = array(
     'title' => 'Project Browser Settings',
     'description' => 'Set the various Project Browser Settings here',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('project_browser_admin'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
+  );
+  
+  $items['admin/project_browser/modules'] = array(
+    'title' => 'Modules',
+    'description' => 'Browse and search for new modules',
+    'page callback' => 'project_browser_page',
+    'page arguments' => array('module'),
+    'access arguments' => array('use project browser'),
+    'file' => 'project_browser.pages.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK
+  );
+  
+  $items['admin/project_browser/themes'] = array(
+    'title' => 'Themes',
+    'description' => 'Browse and search for new themes',
+    'page callback' => 'project_browser_page',
+    'page arguments' => array('theme'),
+    'access arguments' => array('use project browser'),
+    'file' => 'project_browser.pages.inc',
+    'type' => MENU_LOCAL_TASK
+  );
+  
+  $items['admin/project_browser/install/%'] = array(
+    'title' => 'Install',
+    'page callback' => 'project_browser_installation_page',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('use project browser'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'project_browser.pages.inc',
   );
   return $items;
 }
@@ -110,6 +139,28 @@ function project_browser_browser_page() {
  *   'text' => 'Views', // The text that was entered as the search query, or 'all'
  *   'type' => 'module', // The type of project being searched
  * )
+ * 
+ * The project_browser_fetch_results($filters) call returns an array like this:
+ * 
+ * array(
+ *   'views' => array( // The key is the project (unique) shortname
+ *     'type' => 'module', // The type of project this is. Can be 'module' or 'theme'
+ *     'title' => 'Views',
+ *     'short_name' => 'views',
+ *     'author' => 'merlinofchaos',
+ *     'description' => "Long project description ...",
+ *     'image' => 'http://www.example.com/image.jpg', // Absolute url to the image, if any
+ *     'usage' => '542312', // How many Downloads the module has had
+ *     'project_url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
+ *     'update_url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
+ *     'last_updated' => '12342523', // UNIX Timestamp of when the project was last updated
+ *     'rating' => '9.6', // A rating on a scale of 1 to 10 of the project, if available
+ *     'dependencies' => array( // An array of the dependencies of this module
+ *         'ctools',
+ *       ),
+ *   ),
+ *   'short_name_2 => array( ... ),
+ * );
  * 
  * @param $filters
  *   An associative array of queries to use to filter results

@@ -1,0 +1,59 @@
+/* $Id$ */
+
+.project-item {
+  border-top: 1px solid #E0E0D8;
+  clear: both;
+  padding-top: 10px;
+}
+.project-browser {
+  border: 1px solid #E0E0D8;
+  padding: 0 10px 10px 10px;
+  float: left;
+  width: 60%; 
+  margin-right:20px;
+}
+
+.install-disabled {
+  color: gray;
+}
+
+.install-enabled {
+  color: green;
+}
+
+.sidebar-right {
+  float: left;
+  width: 30%;
+  border: 1px solid #E0E0D8;
+  padding: 10px;
+}
+
+div.project-information {
+  float: left;
+  width: 80%;
+}
+
+div.project-status {
+  float: right;
+  text-align: right;
+  width: 20%;
+  margin-bottom: 10px;
+}
+
+div.project-title {
+  font-size: 18px;
+}
+
+fieldset#edit-category,
+fieldset#edit-version  {
+  border: none;
+}
+
+div.install-item-prefix {
+  float:left;
+  margin-left: 50px;
+}
+
+div.form-item-install {
+  float: right; 
+}
