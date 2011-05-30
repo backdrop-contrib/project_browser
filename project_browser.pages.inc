@@ -50,31 +50,74 @@ function project_browser_page($type) {
  * @param integer $pid
  *    Project ID
  */
-function project_browser_installation_page($op, $pid) {
+function project_browser_installation_page($op) {
   switch ($op) {
     case 'install':
       include_once (drupal_get_path('module', 'update') . '/update.manager.inc' );
-      $project_url = db_query("SELECT download_link FROM {project_browser_releases} WHERE pid = :pid ORDER BY date DESC", array(':pid' => $pid))->fetchField();
-      if(!$project_url) {
-        $title = db_query("SELECT title FROM {project_browser_projects} WHERE pid = :pid", array(':pid' => $pid))->fetchField();
-        drupal_set_message('No release found for project ' . $title, 'error', TRUE);
-        drupal_goto('admin/project_browser');
+      
+      $queued_releases = project_browser_get_install_list();
+      
+      $operations = array();
+      foreach ($queued_releases as $release) {
+        $operations[] = array('_project_browser_batch_install_release', array($release));
       }
+      $batch = array(
+        'operations' => $operations,
+        'finished' => '_project_browser_batch_install_releases_finished',
+        'title' => t('Installing projects'),
+        'init_message' => t('Beginning the install process.'),
+        'progress_message' => t('Installed @current out of @total.'),
+        'error_message' => t('Installation has encountered an error.'),
+      );
+      batch_set($batch);
       
-      // TODO: Check if dev version and if only dev version available report to user.
-      
-      // Fill in values.
-      $form_state = array();
-      $form_state['values']['project_url'] = $project_url;
-      $form_state['values']['op'] = t('Install');
-      // @todo: determine type of project (module, theme, ...)
-      $context = 'module';
-      
-      drupal_form_submit('update_manager_install_form', $form_state, $context);
       drupal_goto('admin/project_browser');
       break;
   }
+}
+
+/**
+ * Batch function to install a single release of a project
+ */
+function _project_browser_batch_install_release($release, &$context) {
+  // Fill in values.
+  $form_state = array();
+  $form_state['values']['project_url'] = $release['download_url'];
+  $form_state['values']['op'] = t('Install');
   
+  drupal_form_submit('update_manager_install_form', $form_state, $release['type']);
+  
+  // Check for errors
+  $errors = form_get_errors();
+  
+  if (is_array($errors) AND !empty($errors)) {
+    watchdog('project_browser', 'There was an error while installing %project. 
+      The errors are as follows: <br />@errors',
+      array('@errors' => implode('<br />', $errors)), WATCHDOG_ERROR);
+    $context['results'][] = t('Error installing %project. Errors have been logged.', array('%project' => $release['title']));
+    $context['message'] = t('Error installing %project.', array('%project' => $release['title']));
+  }
+  else {
+    $context['results'][] = t('Successfully installed %project.', array('%project' => $release['title']));
+    $context['message'] = t('Installing projects: %project...', array('%project' => $release['title']));
+  }
+}
+
+/**
+ * Show a message and finish up the batch
+ */
+function _project_browser_batch_install_releases_finished($success, $results, $operations) {
+  foreach ($results as $result) {
+    drupal_set_message($result);
+  }
+  
+  if ($success) {
+    $message = format_plural(count($results), 'One project installed', '@count projects installed.');
+  }
+  else {
+    $message = t('Finished with an error.');
+  }
+  drupal_set_message($message);
 }
 
 /**
@@ -113,8 +156,8 @@ function template_preprocess_project_browser_list(&$variables) {
   $filters .= project_browser_sort_list();
   $variables['filters'] = $filters;
   
-  // TODO - Add the install list
-  //$variables['install_list'] = project_browser_get_install_list();
+  // Add the install list
+  $variables['install_list'] = project_browser_get_install_list();
 }
 
 /**
