@@ -53,21 +53,21 @@ function project_browser_page($type) {
  *    Operation to preform.
  */
 function project_browser_installation_page($op) {
-  project_browser_installation_task_list($op);
   switch ($op) {
     case 'select_versions':
-      project_browser_installation_select_versions_page();
+      $content = project_browser_installation_select_versions_page();
       break;
     case 'backup':
-      project_browser_installation_backup_page();
+      $content = project_browser_installation_backup_page();
       break;
     case 'install':
-      project_browser_installation_install_page();
+      $content = project_browser_installation_install_page();
       break;
     case 'finished':
-      project_browser_installation_enable_page();
+      $content = project_browser_installation_enable_page();
       break;
   }
+  return theme('project_browser_install', array('current_task' => $op, 'main_content' => $content));
 }
 
 /**
@@ -124,7 +124,7 @@ function project_browser_installation_enable_page() {
 }
 
 /**
- * Add a task list to the sidebar area when installing projects
+ * Get a task list to the sidebar area when installing projects
  * 
  * This will need to be called from every page of the install process
  * 
@@ -140,7 +140,7 @@ function project_browser_installation_task_list($active = NULL) {
     'enable' => t('Enable projects'),
   );
 
-  drupal_add_region_content('sidebar_first', theme('task_list', array('items' => $tasks, 'active' => $active)));
+  return theme('task_list', array('items' => $tasks, 'active' => $active));
 }
 
 /**

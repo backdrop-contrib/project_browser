@@ -4,11 +4,11 @@
 /**
  * @file
  * 
- * Default theming implementation for displaying list of projects.
+ * Default theming implementation for displaying the install page
  * 
  * 
  * 
- * @see project_browser_preprocess_project_browser_list()
+ * @see project_preprocess_project_browser_install()
  */
 ?>
 <?php if ($projects_list) :?>

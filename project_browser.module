@@ -82,16 +82,6 @@ function project_browser_menu() {
   return $items;
 }
 
-/**
- * Implements hook_dashboard_regions()
- */
-function project_browser_dashboard_regions() {
-  return array(
-    'project_browser_sidebar_right' => 'Right sidebar for project browser page',
-    'project_browser_sidebar_left' => 'Left sidebar for project installation page',
-  );
-}
-
 // ======================================
 // Administration Page:
 // ======================================
@@ -128,34 +118,44 @@ function project_browser_admin() {
  */
 function project_browser_theme() {
   return array(
-    //Template for list of projects
+    // Template for installation page
+    'project_browser_install' => array(
+      'variables' => array('current_task' => NULL, 'main_content' => NULL),
+      'template' => 'project_browser_install',
+    ),
+    // Template for list of projects
     'project_browser_list' => array(
       'variables' => array('projects_list' => NULL),
-      'file' => 'project_browser.pages.inc',
       'template' => 'project_browser_list',
     ),
     // Template for single project
     'project_browser_project' => array(
       'variables' => array('project' => NULL),
-      'file' => 'project_browser.pages.inc',
       'template' => 'project_browser_project',
     ),
   );
 }
 
 /**
- * Theme the list of projects.
+ * Add some variables for the projects install theme
  * 
  * @param $variables
- *    An associative array containing:
+ *   An associative array containing:
  *     - projects_list : array of all projects
- *     
- * @return
- *    A string containing the listing output.
  */
-function template_preprocess_project_browser_list(&$variables) {
-  include_once(drupal_get_path('module', 'project_browser') . '/project_browser.inc');
-  
+function project_browser_preprocess_project_browser_install(&$variables) {
+  // Add the themed list
+  $variables['task_list'] = project_browser_installation_task_list($variables['current_task']);
+}
+
+/**
+ * Add some variables for the projects list theme
+ * 
+ * @param $variables
+ *   An associative array containing:
+ *     - projects_list : array of all projects
+ */
+function project_browser_preprocess_project_browser_list(&$variables) {
   // Add the themed list
   $variables['list'] = '';
   
@@ -184,16 +184,13 @@ function template_preprocess_project_browser_list(&$variables) {
 }
 
 /**
- * Theme one project.
+ * Add some variables for the project theme
  * 
  * @param $variables
  *   An associative array containing:
  *     - project : associative array of project variables
- *     
- * @return
- *   A string containing the listing output.
  */
-function template_preprocess_project_browser_project(&$variables) {
+function project_browser_preprocess_project_browser_project(&$variables) {
   include_once(drupal_get_path('module', 'project_browser') . '/project_browser.inc');
   
   $project = $variables['project'];

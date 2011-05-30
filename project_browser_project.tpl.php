@@ -7,7 +7,7 @@
  * Default theme implementation for displaying a project.
  * 
  * 
- * @see template_preprocess_project_browser_project
+ * @see project_browser_preprocess_project_browser_project
  */
 ?>
 <div class="project-item">
