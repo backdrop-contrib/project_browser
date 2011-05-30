@@ -104,6 +104,13 @@ function project_browser_browser_page() {
 /**
  * Fetches results from the servers based on the parameters passed in
  * 
+ * $filters should be an associative array with the following keys:
+ * array(
+ *   'drupal_version' => '6.x', // The Major Version of Drupal that is running on the Client
+ *   'text' => 'Views', // The text that was entered as the search query, or 'all'
+ *   'type' => 'module', // The type of project being searched
+ * )
+ * 
  * @param $filters
  *   An associative array of queries to use to filter results
  * @return array
