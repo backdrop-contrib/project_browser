@@ -6,14 +6,21 @@
  * 
  */
 
+ /**
+  * Returns the themed install list form
+  */
+function project_browser_get_install_list() {
+  // TODO - Finish this
+  return 'Install List will go here';
+}
+
 /**
- * Implements hook_form().
- * TODO: Form to add/remove module from install list.
+ * Shows a checkbox that will add a project to the install list
  * 
  * @param array $project
  *   A project array object
  */
-function name($form, &$form_state, $project) {
+function project_browser_install_form($form, &$form_state, $project) {
   $form['install'] = array(
     '#type' => 'checkbox',
     '#prefix' => '<div class="install-item-prefix">'.t('Add to list').'</div>',
@@ -46,8 +53,8 @@ function project_browser_install_form_submit($form, &$form_state) {
 /**
  * Form to get all available categories. 
  */
-function project_browser_category_filter_form($form, &$form_state) {
-  $categories = project_browser_get_categories();
+function project_browser_category_filter_form($form, &$form_state, $type) {
+  $categories = project_browser_get_categories($type);
   $form['category'] = array(
     '#type' => 'fieldset',
     '#title' => t('Category'),
@@ -85,7 +92,6 @@ function project_browser_category_filter_form_submit($form, &$form_state) {
  * Form to let user search for text
  */
 function project_browser_text_filter_form($form, &$form_state) {
-  $categories = project_browser_get_categories();
   $form['search'] = array(
     '#type' => 'fieldset',
     '#title' => t('Search'),
@@ -124,7 +130,7 @@ function project_browser_sort_list() {
  * @return array
  *    Array containing all available categories
  */
-function project_browser_get_categories() {
+function project_browser_get_categories($type) {
   $categories = project_browser_fetch_categories($type);
   
   ksort($categories);

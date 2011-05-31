@@ -10,6 +10,8 @@
  * admin pages, and install them.
  */
 
+require_once('project_browser.inc');
+
 /**
  * Display help and module information
  */
@@ -42,7 +44,7 @@ function project_browser_permission() {
  */
 function project_browser_menu() {
   $items = array();
-  $items['admin/settings/project_browser'] = array(
+  $items['admin/config/project_browser'] = array(
     'title' => 'Project Browser Settings',
     'description' => 'Set the various Project Browser Settings here',
     'page callback' => 'drupal_get_form',
@@ -125,7 +127,7 @@ function project_browser_theme() {
     ),
     // Template for list of projects
     'project_browser_list' => array(
-      'variables' => array('projects_list' => NULL),
+      'variables' => array('projects_list' => NULL, 'type' => NULL),
       'template' => 'project_browser_list',
     ),
     // Template for single project
@@ -172,7 +174,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
   $filters = drupal_render($search_form);
   
   // Add the available category to filter on
-  $category_form = drupal_get_form('project_browser_category_filter_form');
+  $category_form = drupal_get_form('project_browser_category_filter_form', $variables['type']);
   $filters .= drupal_render($category_form); 
   
   // Add the sorting of the list

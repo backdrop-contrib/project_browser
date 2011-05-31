@@ -39,7 +39,7 @@ function project_browser_page($type) {
     $list[] = $project;
   }
   
-  return theme('project_browser_list', array('projects_list' => $list));
+  return theme('project_browser_list', array('projects_list' => $list, 'type' => $type));
 }
 
 // ======================================
@@ -79,7 +79,7 @@ function project_browser_installation_page($op) {
  * project
  */
 function project_browser_installation_select_versions_page() {
-  // TODO - Show a form that lets the user select which version of the projects to install
+  // Show a form that lets the user select which version of the projects to install
   $queued_projects = $_SESSION['project_browser_install_list'];
   
   return drupal_get_form('project_browser_installation_select_versions_form', $queued_projects);
@@ -94,24 +94,63 @@ function project_browser_installation_select_versions_page() {
 function project_browser_installation_select_versions_form($form, &$form_state, $projects) {
   $form = array();
   
+  $form['releases'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Select which version to install',
+      '#tree' => TRUE,
+      '#collapsible' => FALSE,
+    );
+  
   foreach ($projects as $project) {
     // Get the available releases for this project
     $releases = project_browser_get_project_releases($project);
     
-    $form['project-' . $project['name']] = array(
+    $form['releases']['project-' . $project['name']] = array(
       '#type' => 'fieldset',
       '#title' => $project['title'],
       '#collapsible' => FALSE,
     );
-    
-    $form['project-' . $project['name']]['project-' . $project['name'] . '-release'] = array(
+    $form['releases']['project-' . $project['name']]['project'] = array(
+      '#type' => 'value',
+      '#options' => $project,
+    );
+    $form['releases']['project-' . $project['name']]['release_name'] = array(
       '#type' => 'radios',
       '#title' => t('Select release'),
       '#options' => $releases,
     );
   }
   
+  $form['releases']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next'),
+  );
+  
   return $form;
+}
+
+/**
+ * Submit handler for the select versions form
+ */
+function project_browser_installation_select_versions_form_submit($form, &$form_state) {
+  foreach ($form_state['values']['releases'] as $item) {
+    // Load the selected release
+    if ($release = project_browser_get_release($item['release_name'], $item['project'])) {
+      // Add the release to a session variable
+      $_SESSION['project_browser_install_releases_list'][] = $release;
+    }
+  }
+  
+  drupal_goto('admin/project_browser/install/backup');
+}
+
+/**
+ * Get a release from a project and a release_name
+ */
+function project_browser_get_release($release_name, $project) {
+  $releases = project_browser_get_project_releases($project);
+  
+  return isset($releases[$release_name]) ? $releases[$release_name] : FALSE;
 }
 
 /**
