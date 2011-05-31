@@ -10,25 +10,19 @@
  * Implements hook_form().
  * TODO: Form to add/remove module from install list.
  * 
- * @param array $release
- *   Associative array like so:
- *     array(
- *       'title' => 'Views',
- *       'short_name' => 'views',
- *       'version_string' => '7.x-3.3',
- *       'download_url' => 'http://www.drupal.org/views-7.x-3.3.tar.gz',
- *     )
+ * @param array $project
+ *   A project array object
  */
-function project_browser_install_form($form, &$form_state, $release) {
+function name($form, &$form_state, $project) {
   $form['install'] = array(
     '#type' => 'checkbox',
     '#prefix' => '<div class="install-item-prefix">'.t('Add to list').'</div>',
     '#default_value' => 0,
     '#attributes' => array('onchange' => 'this.form.submit();'),
   );
-  $form['release'] = array(
+  $form['project'] = array(
     '#type' => 'value',
-    '#value' => $release,
+    '#value' => $project,
   );
   
   $form['submit'] = array(
@@ -46,7 +40,7 @@ function project_browser_install_form($form, &$form_state, $release) {
  */
 function project_browser_install_form_submit($form, &$form_state) {
   // Add the project to the install list
-  $_SESSION['project_browser_install_list'][] = $form_state['values']['release'];
+  $_SESSION['project_browser_install_list'][] = $form_state['values']['project'];
 }
 
 /**
@@ -118,15 +112,6 @@ function project_browser_text_filter_form_submit($form, &$form_state) {
 }
 
 /**
- * Helper function to get install list.
- * 
- * Install list is all projects that are selected to install. 
- */
-function project_browser_get_install_list() {
-  return $_SESSION['project_browser_install_list'];
-}
-
-/**
  * Helper function to get available sortings.
  */
 function project_browser_sort_list() {
@@ -175,19 +160,19 @@ function _project_browser_string_to_array($string) {
  * 
  * @param $type
  *   The type of project. Could be 'theme' or 'module'
- * @param $short_name
+ * @param $name
  *   The short name of the project
  * @return bool
  *   TRUE if the project is enabled, FALSE otherwise
  */
-function _project_browser_is_project_enabled($type, $short_name) {
+function _project_browser_is_project_enabled($type, $name) {
   switch ($type) {
     case 'module':
-      return module_exists($short_name);
+      return module_exists($name);
       break;
     case 'theme':
       $themes = list_themes();
-      return isset($themes[$short_name]);
+      return isset($themes[$name]);
       break;
   }
   return FALSE;
@@ -213,20 +198,20 @@ function _project_browser_is_project_enabled($type, $short_name) {
  *   'views' => array( // The key is the project (unique) shortname
  *     'type' => 'module', // The type of project this is. Can be 'module' or 'theme'
  *     'title' => 'Views',
- *     'short_name' => 'views',
+ *     'name' => 'views',
  *     'author' => 'merlinofchaos',
  *     'description' => "Long project description ...",
  *     'image' => 'http://www.example.com/image.jpg', // Absolute url to the image, if any
  *     'usage' => '542312', // How many Downloads the module has had
- *     'project_url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
- *     'update_url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
- *     'last_updated' => '12342523', // UNIX Timestamp of when the project was last updated
+ *     'project url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
+ *     'project status url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
+ *     'last updated' => '12342523', // UNIX Timestamp of when the project was last updated
  *     'rating' => '9.6', // A rating on a scale of 1 to 10 of the project, if available
  *     'dependencies' => array( // An array of the dependencies of this module
  *         'ctools',
  *       ),
  *   ),
- *   'short_name_2 => array( ... ),
+ *   'name_2 => array( ... ),
  * );
  * 
  * @param $filters
@@ -314,4 +299,23 @@ function project_browser_get_servers() {
   }
   
   return $servers;
+}
+
+/**
+ * Uses the project status url to get the available releases for a project
+ * 
+ * @param $project
+ *   The project to get the releases for
+ * @return array
+ *   An array of releases for this project
+ */
+function project_browser_get_project_releases($project) {
+  $releases = array();
+  
+  // Build the releases cache for this project
+  if (_update_process_fetch_task($project)) {
+    $releases = _update_cache_get('available_releases::' . $project['name']);
+  }
+  
+  return $releases;
 }

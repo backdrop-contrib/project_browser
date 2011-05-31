@@ -80,6 +80,38 @@ function project_browser_installation_page($op) {
  */
 function project_browser_installation_select_versions_page() {
   // TODO - Show a form that lets the user select which version of the projects to install
+  $queued_projects = $_SESSION['project_browser_install_list'];
+  
+  return drupal_get_form('project_browser_installation_select_versions_form', $queued_projects);
+}
+
+/**
+ * Form builder for the select versions form
+ * 
+ * @param array $projects
+ *   An array of projects to get the releases for
+ */
+function project_browser_installation_select_versions_form($form, &$form_state, $projects) {
+  $form = array();
+  
+  foreach ($projects as $project) {
+    // Get the available releases for this project
+    $releases = project_browser_get_project_releases($project);
+    
+    $form['project-' . $project['name']] = array(
+      '#type' => 'fieldset',
+      '#title' => $project['title'],
+      '#collapsible' => FALSE,
+    );
+    
+    $form['project-' . $project['name']]['project-' . $project['name'] . '-release'] = array(
+      '#type' => 'radios',
+      '#title' => t('Select release'),
+      '#options' => $releases,
+    );
+  }
+  
+  return $form;
 }
 
 /**
@@ -99,7 +131,7 @@ function project_browser_installation_backup_page() {
 function project_browser_installation_install_page() {
   include_once (drupal_get_path('module', 'update') . '/update.manager.inc' );
   
-  $queued_releases = project_browser_get_install_list();
+  $queued_releases = $_SESSION['project_browser_install_releases_list'];
   
   $operations = array();
   foreach ($queued_releases as $release) {
@@ -163,11 +195,11 @@ function _project_browser_batch_install_release($release, &$context) {
     watchdog('project_browser', 'There was an error while installing %project. 
       The errors are as follows: <br />@errors',
       array('@errors' => implode('<br />', $errors)), WATCHDOG_ERROR);
-    $context['results'][] = t('Error installing %project. Errors have been logged.', array('%project' => $release['title']));
+    $context['results']['failures'] = t('Error installing %project. Errors have been logged.', array('%project' => $release['title']));
     $context['message'] = t('Error installing %project.', array('%project' => $release['title']));
   }
   else {
-    $context['results'][] = t('Successfully installed %project.', array('%project' => $release['title']));
+    $context['results']['successes'] = t('Successfully installed %project.', array('%project' => $release['title']));
     $context['message'] = t('Installing projects: %project...', array('%project' => $release['title']));
   }
 }
@@ -176,17 +208,19 @@ function _project_browser_batch_install_release($release, &$context) {
  * Show a message and finish up the batch
  */
 function _project_browser_batch_install_releases_finished($success, $results, $operations) {
-  foreach ($results as $result) {
-    drupal_set_message($result);
-  }
-  
   if ($success) {
-    $message = format_plural(count($results), 'One project installed', '@count projects installed.');
+    if (!empty($results)) {
+      if (!empty($results['successes'])) {
+        drupal_set_message(format_plural($results['successes'], 'One project installed.', '@count projects installed.'));
+      }
+      if (!empty($results['failures'])) {
+        drupal_set_message(format_plural($results['failures'], 'Failed to install one project.', 'Failed to install @count projects.'), 'error');
+      }
+    }
   }
   else {
-    $message = t('Finished with an error.');
+    drupal_set_message(t('Finished with an error.'));
   }
-  drupal_set_message($message);
-  
+
   drupal_goto('admin/project_browser/install/enable');
 }

@@ -199,18 +199,19 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   $variables['description'] = $project['description'];
   
   // Check if the project is installed
-  if (_project_browser_is_project_enabled($project['type'], $project['short_name'])) {
+  if (_project_browser_is_project_enabled($project['type'], $project['name'])) {
     $variables['status'] = '<div class="install-disabled">Already installed</div>'; 
     $variables['install'] = '';
   }
-  elseif (drupal_get_filename($project['type'], $project['short_name'])) {
+  elseif (drupal_get_filename($project['type'], $project['name'])) {
     $variables['status'] = '<div class="install-disabled">Already downloaded</div>';
     $variables['install'] = '';
     // TODO - We should offer a 'remove' option to delete the project from the file system
+    // TODO - We should offer an enable link that will enable the project
   }
   else {
     $variables['status'] = '<div class="install-enabled">Install</div>';
-    $install_form = drupal_get_form('project_browser_' . $project['short_name'] . '_install_form', $project->pid);
+    $install_form = drupal_get_form('project_browser_install_form', $project);
     $variables['install'] = drupal_render($install_form);
   }
 }
