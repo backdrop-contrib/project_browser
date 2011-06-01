@@ -193,7 +193,7 @@ function project_browser_installation_install_page() {
  * Show a form which lets the user enable the newly installed projects
  */
 function project_browser_installation_enable_page() {
-  // TODO - Implement this
+  // TODO - Use http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/7#tableselect
 }
 
 /**

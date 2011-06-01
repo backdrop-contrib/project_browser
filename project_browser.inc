@@ -10,8 +10,18 @@
   * Returns the themed install list form
   */
 function project_browser_get_install_list() {
-  // TODO - Finish this
-  return 'Install List will go here';
+  if (isset($_SESSION['project_browser_install_list'])) {
+    // Show a list of the queued projects
+    $queued_projects = $_SESSION['project_browser_install_list'];
+    
+    if (is_array($queued_projects) AND !empty($queued_projects)) {
+      foreach ($queued_projects as $project) {
+        dpm($project);
+      }
+    }
+  }
+  
+  return t('Install queue is empty.');
 }
 
 /**
@@ -51,58 +61,37 @@ function project_browser_install_form_submit($form, &$form_state) {
 }
 
 /**
- * Form to get all available categories. 
+ * Form builder for the filters
  */
-function project_browser_category_filter_form($form, &$form_state, $type) {
-  $categories = project_browser_get_categories($type);
-  $form['category'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Category'),
-    '#tree' => TRUE,
-    '#collapsible' => FALSE,
-  );
-  
-  foreach ($categories as $category) {
-    $form_category = str_replace(' ', '_', $category);
-    $form['category'][$form_category] = array(
-      '#type' => 'checkbox',
-      '#title' => $category,
-      '#default_value' => isset($_SESSION['project_browser_category'][$category]) ? $_SESSION['project_browser_category'][$category] : 0,
-      '#attributes' => array('onchange' => 'this.form.submit()'),
-    );
-  }
-  
-  $form['category']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => 'Filter',
-    '#attributes' => array('style' => 'display: none;')
-  );
-  
-  return $form;
-}
-
-/**
- * Submit handler for setting filter
- */
-function project_browser_category_filter_form_submit($form, &$form_state) {
-  $_SESSION['project_browser_category'][$session_key] = $form_state['values']['category'];
-}
-
-/**
- * Form to let user search for text
- */
-function project_browser_text_filter_form($form, &$form_state) {
-  $form['search'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Search'),
-    '#collapsible' => FALSE,
-  );
-  $form['search']['search_text'] = array(
-    '#type' => 'textbox',
+function project_browser_filters_form($form, &$form_state, $type) {
+  $form['search_text'] = array(
+    '#type' => 'textfield',
+    '#size' => '30',
     '#title' => t('Search String'),
     '#default_value' => isset($_SESSION['project_browser_text_filter']) ? $_SESSION['project_browser_text_filter'] : '',
   );
-  $form['search']['submit'] = array(
+  
+  // Add the categories filter if there are categories
+  if ($categories = project_browser_get_categories($type)) {
+    $form['category'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Categories'),
+      '#tree' => TRUE,
+      '#collapsible' => FALSE,
+    );
+    
+    foreach ($categories as $category) {
+      $form_category = str_replace(' ', '_', $category);
+      $form['category'][$form_category] = array(
+        '#type' => 'checkbox',
+        '#title' => $category,
+        '#default_value' => isset($_SESSION['project_browser_category'][$category]) ? $_SESSION['project_browser_category'][$category] : 0,
+        '#attributes' => array('onchange' => 'this.form.submit()'),
+      );
+    }
+  }
+  
+  $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Filter'),
   );
@@ -111,10 +100,11 @@ function project_browser_text_filter_form($form, &$form_state) {
 }
 
 /**
- * Submit handler for setting filter
+ * Submit handler for filters form
  */
-function project_browser_text_filter_form_submit($form, &$form_state) {
+function project_browser_filters_form_submit($form, &$form_state) {
   $_SESSION['project_browser_category'][$session_key] = $value;
+  $_SESSION['project_browser_category'][$session_key] = $form_state['values']['category'];
 }
 
 /**
@@ -128,13 +118,16 @@ function project_browser_sort_list() {
  * Helper function to get all available categories.
  * 
  * @return array
- *    Array containing all available categories
+ *    Array containing all available categories or FALSE if no categories
  */
 function project_browser_get_categories($type) {
   $categories = project_browser_fetch_categories($type);
   
-  ksort($categories);
-  return $categories;
+  if (is_array($categories) AND !empty($categories)) {
+    ksort($categories);
+    return $categories;
+  }
+  return FALSE;
 }
 
 /**
@@ -298,6 +291,10 @@ function project_browser_get_servers() {
   $servers = array(
     'http://www.drupal.org/xmlrpc.php' => 'Drupal.org',
   );
+  
+  // REMOVEME once drupal.org has the functionality built in
+  $servers = array();
+  
   if ($servers_raw = variable_get('project_browser_servers', '')) {
     // Process the variable and add the servers to the list
     $custom_servers = _project_browser_string_to_array($servers_raw);

@@ -6,14 +6,12 @@
   padding-top: 10px;
 }
 .project-browser {
-  border: 1px solid #E0E0D8;
   padding: 10px;
   float: left;
   width: 60%; 
 }
 
 .project-browser-install-main {
-  border: 1px solid #E0E0D8;
   padding: 10px;
   float: right;
   width: 60%; 
@@ -30,14 +28,12 @@
 .project-browser-install-sidebar-left {
   float: left;
   width: 30%;
-  border: 1px solid #E0E0D8;
   padding: 10px;
 }
 
 .project-browser-sidebar-right {
   float: right;
   width: 30%;
-  border: 1px solid #E0E0D8;
   padding: 10px;
 }
 

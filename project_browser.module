@@ -53,27 +53,36 @@ function project_browser_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
   
-  $items['admin/project_browser/modules'] = array(
+  $items['admin/modules/project_browser'] = array(
+    'title' => 'Project Browser',
+    'description' => 'Browse and search for new modules',
+    'page callback' => 'project_browser_page',
+    'page arguments' => array('module'),
+    'access arguments' => array('use project browser'),
+    'file' => 'project_browser.pages.inc',
+  );
+  
+  $items['admin/modules/project_browser/modules'] = array(
     'title' => 'Modules',
     'description' => 'Browse and search for new modules',
     'page callback' => 'project_browser_page',
     'page arguments' => array('module'),
     'access arguments' => array('use project browser'),
     'file' => 'project_browser.pages.inc',
-    'type' => MENU_DEFAULT_LOCAL_TASK
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   
-  $items['admin/project_browser/themes'] = array(
+  $items['admin/modules/project_browser/themes'] = array(
     'title' => 'Themes',
     'description' => 'Browse and search for new themes',
     'page callback' => 'project_browser_page',
     'page arguments' => array('theme'),
     'access arguments' => array('use project browser'),
     'file' => 'project_browser.pages.inc',
-    'type' => MENU_LOCAL_TASK
+    'type' => MENU_LOCAL_TASK,
   );
   
-  $items['admin/project_browser/install/%'] = array(
+  $items['admin/modules/project_browser/install/%'] = array(
     'title' => 'Install',
     'page callback' => 'project_browser_installation_page',
     'page arguments' => array(3),
@@ -82,6 +91,23 @@ function project_browser_menu() {
     'file' => 'project_browser.pages.inc',
   );
   return $items;
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ * 
+ * This is used to put the 'Project Browser' action on the 'Modules' page
+ */
+function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  if ($root_path == 'admin/modules') {
+    $item = menu_get_item('admin/modules/project_browser');
+    if ($item['access']) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+  }
 }
 
 // ======================================
@@ -158,28 +184,36 @@ function project_browser_preprocess_project_browser_install(&$variables) {
  *     - projects_list : array of all projects
  */
 function project_browser_preprocess_project_browser_list(&$variables) {
-  // Add the themed list
-  $variables['list'] = '';
+  drupal_add_css(drupal_get_path('module', 'dashboard') . '/dashboard.css');
+
+  if (is_array($variables['projects_list']) AND !empty($variables['projects_list'])) {
+    $variables['main_content'] = '';
+    // Theme each individual project and add to the list
+    foreach ($variables['projects_list'] as $project) {
+      $variables['main_content'] .= theme('project_browser_project', array('project' => $project));
+    }
+  }
+  else {
+    $variables['main_content'] = t('No results found.');
+  }
   
-  // Theme each individual project and add to the list
-  foreach ($variables['projects_list'] as $project) {
-    $variables['list'] .= theme('project_browser_project', array('project' => $project));
+  switch ($variables['type']) {
+    case 'module':
+      $variables['title'] = t('Modules');
+      break;
+    case 'theme':
+      $variables['title'] = t('Themes');
+      break;
+    default:
+      $variables['title'] = t('Projects');
+      break;
   }
   
   // Add the pager
   $variables['pager'] = theme('pager', array('tags' => NULL));
   
   // Add the filters
-  $search_form = drupal_get_form('project_browser_text_filter_form');
-  $filters = drupal_render($search_form);
-  
-  // Add the available category to filter on
-  $category_form = drupal_get_form('project_browser_category_filter_form', $variables['type']);
-  $filters .= drupal_render($category_form); 
-  
-  // Add the sorting of the list
-  $filters .= project_browser_sort_list();
-  $variables['filters'] = $filters;
+  $variables['filters'] = drupal_render(drupal_get_form('project_browser_filters_form', $variables['type']));
   
   // Add the install list
   $variables['install_list'] = project_browser_get_install_list();
