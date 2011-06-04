@@ -41,6 +41,7 @@ function project_browser_page($type) {
   
   return theme('project_browser_list', array('projects_list' => $list, 'type' => $type));
 }
+  
 
 // ======================================
 // Installation Page:

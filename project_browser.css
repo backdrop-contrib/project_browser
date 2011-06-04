@@ -5,11 +5,6 @@
   clear: both;
   padding-top: 10px;
 }
-.project-browser {
-  padding: 10px;
-  float: left;
-  width: 60%; 
-}
 
 .project-browser-install-main {
   padding: 10px;
@@ -27,12 +22,6 @@
 
 .project-browser-install-sidebar-left {
   float: left;
-  width: 30%;
-  padding: 10px;
-}
-
-.project-browser-sidebar-right {
-  float: right;
   width: 30%;
   padding: 10px;
 }
@@ -65,4 +54,39 @@ div.install-item-prefix {
 
 div.form-item-install {
   float: right; 
+}
+
+#project-browser div.project-browser-region {
+  float: left;
+  min-height: 1px;
+}
+
+#project-browser div#project-browser-main {
+  width: 65%;
+  margin-right: 1%; /* LTR */
+}
+
+#project-browser div#project-browser-sidebar-right {
+  width: 33%;
+}
+
+#project-browser div.project-browser-block {
+  margin-bottom: 20px;
+  border: 1px solid #CCCCCC;
+}
+
+#project-browser .project-browser-region .project-browser-block {
+  clear: both;
+}
+
+#project-browser div.project-browser-block h2 {
+  float: none;
+  font-size: 1em;
+  margin: 0;
+  padding: 3px 10px;
+  background: none repeat scroll 0 0 #E0E0D8;
+}
+
+#project-browser div.project-browser-block div.content {
+  padding: 10px 5px 5px;
 }
