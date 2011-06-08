@@ -14,7 +14,7 @@
 .project-browser-install-main {
   padding: 10px;
   float: right;
-  width: 60%; 
+  width: 75%; 
 }
 
 .install-disabled {
@@ -27,7 +27,7 @@
 
 .project-browser-install-sidebar-left {
   float: left;
-  width: 30%;
+  width: 20%;
   padding: 10px;
 }
 

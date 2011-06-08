@@ -26,4 +26,7 @@
   
   ?>
   
+  <div class='project-browser-install-link'>
+    <?php print $install_button; ?>
+  </div>
 </div>

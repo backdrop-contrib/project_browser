@@ -35,6 +35,9 @@ function project_browser_page($type) {
   // Get the projects to display here based on the filters
   $projects = project_browser_fetch_results($filters);
   
+  // Save the listed projects in the session so it can be used
+  $_SESSION['project_browser_listed_projects'] = $projects;
+  
   $list = array();
   foreach ($projects as $project) {
     $list[] = $project;
@@ -71,7 +74,7 @@ function project_browser_installation_page($op) {
       $content = project_browser_installation_enable_page();
       break;
   }
-  return theme('project_browser_install', array('current_task' => $op, 'main_content' => $content));
+  return theme('project_browser_install', array('current_task' => $op, 'main_content' => drupal_render($content)));
 }
 
 /**
@@ -82,7 +85,7 @@ function project_browser_installation_page($op) {
  */
 function project_browser_installation_select_versions_page() {
   // Show a form that lets the user select which version of the projects to install
-  $queued_projects = $_SESSION['project_browser_install_list'];
+  $queued_projects = project_browser_get_queued_projects();
   
   return drupal_get_form('project_browser_installation_select_versions_form', $queued_projects);
 }
@@ -96,16 +99,33 @@ function project_browser_installation_select_versions_page() {
 function project_browser_installation_select_versions_form($form, &$form_state, $projects) {
   $form = array();
   
-  $form['releases'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Select which version to install',
-      '#tree' => TRUE,
-      '#collapsible' => FALSE,
-    );
+  // First unset any old data
+  unset($_SESSION['project_browser_install_releases_list']);
+  unset($_SESSION['project_browser_installed_projects']);
   
+  $form['releases'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Select which version to install',
+    '#tree' => TRUE,
+    '#collapsible' => FALSE,
+  );
+
   foreach ($projects as $project) {
     // Get the available releases for this project
     $releases = project_browser_get_project_releases($project);
+
+    $releases_list = array();
+    
+    foreach ($releases as $version => $release) {
+      $release_title = t("@version - @date", array(
+        '@version' => $release['version'],
+        '@date' => format_date($release['date'], 'custom', 'M j, Y'),
+        ));
+      if (isset($release['terms']['Release type']) AND !empty($release['terms']['Release type'])) {
+        $release_title .= " (" . implode(', ', $release['terms']['Release type']) . ")";
+      }
+      $releases_list[$version] = l($release_title, $release['release_link']);
+    }
     
     $form['releases']['project-' . $project['name']] = array(
       '#type' => 'fieldset',
@@ -114,16 +134,17 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
     );
     $form['releases']['project-' . $project['name']]['project'] = array(
       '#type' => 'value',
-      '#options' => $project,
+      '#value' => $project,
     );
     $form['releases']['project-' . $project['name']]['release_name'] = array(
       '#type' => 'radios',
       '#title' => t('Select release'),
-      '#options' => $releases,
+      '#options' => $releases_list,
+      '#required' => TRUE,
     );
   }
   
-  $form['releases']['submit'] = array(
+  $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next'),
   );
@@ -139,11 +160,11 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
     // Load the selected release
     if ($release = project_browser_get_release($item['release_name'], $item['project'])) {
       // Add the release to a session variable
-      $_SESSION['project_browser_install_releases_list'][] = $release;
+      $_SESSION['project_browser_install_releases_list'][$item['release_name']] = $item['project'];
     }
   }
   
-  drupal_goto('admin/project_browser/install/backup');
+  drupal_goto('admin/modules/project_browser/install/install');
 }
 
 /**
@@ -170,21 +191,64 @@ function project_browser_installation_backup_page() {
  * Starts a batch install process of the projects
  */
 function project_browser_installation_install_page() {
-  include_once (drupal_get_path('module', 'update') . '/update.manager.inc' );
+  // Show a Install button
+  $queued_releases = project_browser_get_queued_releases();
   
-  $queued_releases = $_SESSION['project_browser_install_releases_list'];
+  return drupal_get_form('project_browser_installation_install_form', $queued_releases);
+}
+
+/**
+ * Form builder for the select versions form
+ * 
+ * @param array $projects
+ *   An array of projects to get the releases for
+ */
+function project_browser_installation_install_form($form, &$form_state, $releases) {
+  $form = array();
+  
+  $form['releases'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Install'),
+    '#description' => t('You are about to install the following projects.'),
+    '#tree' => TRUE,
+    '#collapsible' => FALSE,
+  );
+
+  foreach ($releases as $release_name => $project) {
+    $form['releases'][$release_name] = array(
+      '#type' => 'item',
+      '#markup' => $project['title'] . ' ' . $release_name,
+    );
+  }
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Install'),
+  );
+  
+  return $form;
+}
+
+/**
+ * Submit handler for the select versions form
+ */
+function project_browser_installation_install_form_submit($form, &$form_state) {
+  module_load_include('inc', 'update', 'update.manager');
+  
+  $queued_releases = project_browser_get_queued_releases();
   
   $operations = array();
-  foreach ($queued_releases as $release) {
-    $operations[] = array('_project_browser_batch_install_release', array($release));
+  foreach ($queued_releases as $release_name => $project) {
+    $operations[] = array('_project_browser_batch_install_release', array($release_name, $project));
   }
   $batch = array(
     'operations' => $operations,
     'finished' => '_project_browser_batch_install_releases_finished',
     'title' => t('Installing projects'),
-    'init_message' => t('Beginning the install process.'),
+    'init_message' => t('Installing modules...'),
     'progress_message' => t('Installed @current out of @total.'),
     'error_message' => t('Installation has encountered an error.'),
+    'file' => drupal_get_path('module', 'project_browser') . '/project_browser.inc',
   );
   batch_set($batch);
 }
@@ -196,6 +260,9 @@ function project_browser_installation_install_page() {
  */
 function project_browser_installation_enable_page() {
   // TODO - Use http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/7#tableselect
+  $installed_projects = project_browser_get_installed_projects();
+  dpm($installed_projects);
+  return 'Placeholder';
 }
 
 /**
@@ -209,59 +276,13 @@ function project_browser_installation_enable_page() {
 function project_browser_installation_task_list($active = NULL) {
   // Default list of tasks.
   $tasks = array(
-    'select_versions' => t('Select versions'),
+    'select_versions' => l(t('Select versions'), 'admin/modules/project_browser/install/select_versions'),
     'backup' => t('Backup site'),
     'install' => t('Install projects'),
     'enable' => t('Enable projects'),
   );
-
-  return theme('task_list', array('items' => $tasks, 'active' => $active));
-}
-
-/**
- * Batch function to install a single release of a project
- */
-function _project_browser_batch_install_release($release, &$context) {
-  // Fill in values.
-  $form_state = array();
-  $form_state['values']['project_url'] = $release['download_url'];
-  $form_state['values']['op'] = t('Install');
   
-  drupal_form_submit('update_manager_install_form', $form_state, $release['type']);
+  require_once DRUPAL_ROOT . '/includes/theme.maintenance.inc';
   
-  // Check for errors
-  $errors = form_get_errors();
-  
-  if (is_array($errors) AND !empty($errors)) {
-    watchdog('project_browser', 'There was an error while installing %project. 
-      The errors are as follows: <br />@errors',
-      array('@errors' => implode('<br />', $errors)), WATCHDOG_ERROR);
-    $context['results']['failures'] = t('Error installing %project. Errors have been logged.', array('%project' => $release['title']));
-    $context['message'] = t('Error installing %project.', array('%project' => $release['title']));
-  }
-  else {
-    $context['results']['successes'] = t('Successfully installed %project.', array('%project' => $release['title']));
-    $context['message'] = t('Installing projects: %project...', array('%project' => $release['title']));
-  }
-}
-
-/**
- * Show a message and finish up the batch
- */
-function _project_browser_batch_install_releases_finished($success, $results, $operations) {
-  if ($success) {
-    if (!empty($results)) {
-      if (!empty($results['successes'])) {
-        drupal_set_message(format_plural($results['successes'], 'One project installed.', '@count projects installed.'));
-      }
-      if (!empty($results['failures'])) {
-        drupal_set_message(format_plural($results['failures'], 'Failed to install one project.', 'Failed to install @count projects.'), 'error');
-      }
-    }
-  }
-  else {
-    drupal_set_message(t('Finished with an error.'));
-  }
-
-  drupal_goto('admin/project_browser/install/enable');
+  return theme_task_list(array('items' => $tasks, 'active' => $active));
 }

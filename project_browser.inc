@@ -10,18 +10,33 @@
   * Returns the themed install list form
   */
 function project_browser_get_install_list() {
-  if (isset($_SESSION['project_browser_install_list'])) {
-    // Show a list of the queued projects
-    $queued_projects = $_SESSION['project_browser_install_list'];
-    
-    $html = '';
-    
-    if (is_array($queued_projects) AND !empty($queued_projects)) {
-      return theme('project_browser_install_queue', array('projects' => $queued_projects));
-    }
+  $queued_projects = project_browser_get_queued_projects();
+  // Show a list of the queued projects
+  if (!empty($queued_projects)) {
+    return theme('project_browser_install_queue', array('projects' => $queued_projects));
   }
   
   return t('Install queue is empty.');
+}
+
+/**
+ * Show an install button for the Install Queue block
+ */
+function project_browser_install_button_form($form, &$form_state) {
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Install',
+  );
+  
+  return $form;
+}
+
+/**
+ * Implements hook_form_submit().
+ */
+function project_browser_install_button_form_submit($form, &$form_state) {
+  // Redirect to the install page
+  drupal_goto('admin/modules/project_browser/install/select_versions');
 }
 
 /**
@@ -31,10 +46,11 @@ function project_browser_get_install_list() {
  *   A project array object
  */
 function project_browser_install_form($form, &$form_state, $project) {
+  $queued_projects = project_browser_get_queued_projects();
   $form['install'] = array(
     '#type' => 'checkbox',
     '#prefix' => '<div class="install-item-prefix">'.t('Add to list').'</div>',
-    '#default_value' => 0,
+    '#default_value' => isset($queued_projects[$project['name']]) ? 1 : 0,
     '#attributes' => array('onchange' => 'this.form.submit();'),
   );
   $form['project'] = array(
@@ -56,8 +72,15 @@ function project_browser_install_form($form, &$form_state, $project) {
  * Implements hook_form_submit().
  */
 function project_browser_install_form_submit($form, &$form_state) {
-  // Add the project to the install list
-  $_SESSION['project_browser_install_list'][] = $form_state['values']['project'];
+  $project = $form_state['values']['project'];
+  if ($form_state['values']['install']) {
+    // Add the project to the install list
+    project_browser_install_queue_add($project);
+  }
+  else {
+    // Remove the project from the install list
+    project_browser_install_queue_remove($project);
+  }
 }
 
 /**
@@ -180,6 +203,82 @@ function _project_browser_is_project_enabled($type, $name) {
       break;
   }
   return FALSE;
+}
+
+/**
+ * Helper function to get the currently listed projects
+ */
+function project_browser_get_listed_projects() {
+  if (isset($_SESSION['project_browser_listed_projects'])) {
+    return $_SESSION['project_browser_listed_projects'];
+  }
+  
+  return array();
+}
+
+/**
+ * Helper function to get the currently queued projects
+ */
+function project_browser_get_queued_projects() {
+  $projects = array();
+  
+  if (isset($_SESSION['project_browser_install_list'])) {
+    foreach ($_SESSION['project_browser_install_list'] as $project) {
+      if (is_array($project) AND !empty($project)) {
+        $projects[$project['name']] = $project;
+      }
+    }
+  }
+  
+  return $projects;
+}
+
+/**
+ * Helper function to get the newly installed projects
+ */
+function project_browser_get_installed_projects() {
+  $projects = array();
+  
+  if (isset($_SESSION['project_browser_installed_projects'])) {
+    foreach ($_SESSION['project_browser_installed_projects'] as $project) {
+      if (is_array($project) AND !empty($project)) {
+        $projects[$project['name']] = $project;
+      }
+    }
+  }
+  
+  return $projects;
+}
+
+/**
+ * Adds a project to the install queue
+ */
+function project_browser_install_queue_add($project) {
+  $_SESSION['project_browser_install_list'][$project['name']] = $project;
+}
+
+/**
+ * Removes a project from the install queue
+ */
+function project_browser_install_queue_remove($project) {
+  unset($_SESSION['project_browser_install_list'][$project['name']]);
+}
+
+/**
+ * Helper function to get the currently queued releases
+ */
+function project_browser_get_queued_releases() {
+  $releases = array();
+  
+  if (isset($_SESSION['project_browser_install_releases_list'])) {
+    foreach ($_SESSION['project_browser_install_releases_list'] as $release_name => $project) {
+      if (is_array($project) AND !empty($project)) {
+        $releases[$release_name] = $project;
+      }
+    }
+  }
+  
+  return $releases;
 }
 
 // ======================================
@@ -319,11 +418,192 @@ function project_browser_get_servers() {
  */
 function project_browser_get_project_releases($project) {
   $releases = array();
-  
+  // FIXME - Change the 'type' key to 'project_type'
+  $project['project_type'] = $project['type'];
   // Build the releases cache for this project
+  module_load_include('inc', 'update', 'update.fetch');
   if (_update_process_fetch_task($project)) {
-    $releases = _update_cache_get('available_releases::' . $project['name']);
+    $data = _update_cache_get('available_releases::' . $project['name']);
+    if (isset($data->data) AND isset($data->data['releases']) AND is_array($data->data['releases'])) {
+      $releases = $data->data['releases'];
+    }
   }
   
   return $releases;
+}
+
+// ======================================
+// Batch Operations:
+// ======================================
+
+/**
+ * Helper function to download a project. This code is mostly copied and pasted from
+ * modules/update/update.manager.inc
+ * 
+ * There were no suitable functions that could be used besides 
+ * drupal_form_submit('update_manager_install_form', $form_state, $project['type']);
+ * and it wouldn't work because this is being run from a Batch function
+ */
+function project_browser_download_project($url) {
+  module_load_include('inc', 'update', 'update.manager');
+  // Download the file
+  $local_cache = update_manager_file_get($url);
+  if (!$local_cache) {
+    return array(
+      'success' => FALSE,
+      'message' => t('Unable to retrieve Drupal project from %url.', array('%url' => $url)),
+      );
+  }
+  
+  // Try to extract it
+  $directory = _update_manager_extract_directory();
+  try {
+    $archive = update_manager_archive_extract($local_cache, $directory);
+  }
+  catch (Exception $e) {
+    return array(
+      'success' => FALSE,
+      'message' => $e->getMessage(),
+      );
+  }
+  $files = $archive->listContents();
+  if (!$files) {
+    return array(
+      'success' => FALSE,
+      'message' => t('Provided archive contains no files.'),
+      );
+  }
+  
+  $project = strtok($files[0], '/\\');
+
+  $archive_errors = update_manager_archive_verify($project, $local_cache, $directory);
+  if (!empty($archive_errors)) {
+    if (!empty($archive_errors)) {
+      foreach ($archive_errors as $error) {
+        drupal_set_message($error, 'error');
+      }
+    }
+    return array(
+      'success' => FALSE,
+      'message' => array_shift($archive_errors),
+      );
+  }
+
+  // Make sure the Updater registry is loaded.
+  drupal_get_updaters();
+
+  $project_location = $directory . '/' . $project;
+  try {
+    $updater = Updater::factory($project_location);
+  }
+  catch (Exception $e) {
+    return array(
+      'success' => FALSE,
+      'message' => $e->getMessage(),
+      );
+  }
+
+  try {
+    $project_title = Updater::getProjectTitle($project_location);
+  }
+  catch (Exception $e) {
+    return array(
+      'success' => FALSE,
+      'message' => $e->getMessage(),
+      );
+  }
+
+  if ($updater->isInstalled()) {
+    return array(
+      'success' => FALSE,
+      'message' => t('%project is already installed.', array('%project' => $project_title)),
+      );
+  }
+
+  $project_real_location = drupal_realpath($project_location);
+  $updater_name = get_class($updater);
+  
+  if (fileowner($project_real_location) == fileowner(conf_path())) {
+    module_load_include('inc', 'update', 'update.authorize');
+    $filetransfer = new FileTransferLocal(DRUPAL_ROOT);
+    
+    // Initialize some variables in the Batch API $context array.
+    $updater = new $updater_name($project_real_location);
+  
+    try {
+      if ($updater->isInstalled()) {
+        // This is an update.
+        $tasks = $updater->update($filetransfer);
+      }
+      else {
+        $tasks = $updater->install($filetransfer);
+      }
+    }
+    catch (UpdaterException $e) {
+      return array(
+        'success' => FALSE,
+        'message' => t('Error installing / updating. Error: @error', array('@error' => $e->getMessage())),
+        );
+    }
+  }
+  else {
+    return array(
+      'success' => FALSE,
+      'message' => t('Permissions are not set up properly.'),
+      );
+  }
+  
+  return array(
+    'success' => TRUE,
+    );
+}
+
+/**
+ * Batch function to install a single release of a project
+ */
+function _project_browser_batch_install_release($release_name, $project, &$context) {
+  module_load_include('inc', 'project_browser', 'project_browser.pages');
+  $release = project_browser_get_release($release_name, $project);
+  
+  $result = project_browser_download_project($release['download_link']);
+  
+  if ($result['success']) {
+    $context['results']['successes'] = t('Successfully installed %project.', array('%project' => $project['title']));
+    $context['message'] = t('Installed %project...', array('%project' => $project['title']));
+    
+    // Add this to the session variable and remove it from the install_queue variable
+    $_SESSION['project_browser_installed_projects'][$project['name']] = $project;
+    unset($_SESSION['project_browser_install_list'][$project['name']]);
+  }
+  else {
+    watchdog('project_browser', 'There was an error while installing %project. 
+      @message',
+      array('@errors' => implode('<br />', $errors), '@message' => $result['message']), WATCHDOG_ERROR);
+    $context['results']['failures'] = t('Error installing %project. Errors have been logged.', array('%project' => $project['title']));
+    $context['message'] = t('Error installing %project. @message', 
+      array('%project' => $project['title'], '@message' => $result['message']));
+  }
+}
+
+/**
+ * Show a message and finish up the batch
+ */
+function _project_browser_batch_install_releases_finished($success, $results, $operations) {
+  unset($_SESSION['project_browser_install_releases_list']);
+  if ($success) {
+    if (!empty($results)) {
+      if (!empty($results['successes'])) {
+        drupal_set_message(format_plural(count($results['successes']), 'One project installed.', '@count projects installed.'));
+      }
+      if (!empty($results['failures'])) {
+        drupal_set_message(format_plural(count($results['failures']), 'Failed to install one project.', 'Failed to install @count projects.'), 'error');
+      }
+    }
+  }
+  else {
+    drupal_set_message(t('Error installing projects.'), 'error');
+    drupal_goto('admin/modules/project_browser/install/select_versions');
+  }
+
+  drupal_goto('admin/modules/project_browser/install/enable');
 }
