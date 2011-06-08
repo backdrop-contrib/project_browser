@@ -14,10 +14,10 @@ function project_browser_get_install_list() {
     // Show a list of the queued projects
     $queued_projects = $_SESSION['project_browser_install_list'];
     
+    $html = '';
+    
     if (is_array($queued_projects) AND !empty($queued_projects)) {
-      foreach ($queued_projects as $project) {
-        dpm($project);
-      }
+      return theme('project_browser_install_queue', array('projects' => $queued_projects));
     }
   }
   
@@ -103,8 +103,13 @@ function project_browser_filters_form($form, &$form_state, $type) {
  * Submit handler for filters form
  */
 function project_browser_filters_form_submit($form, &$form_state) {
-  $_SESSION['project_browser_category'][$session_key] = $value;
-  $_SESSION['project_browser_category'][$session_key] = $form_state['values']['category'];
+  if (isset($form_state['values']['category'])) {
+    $_SESSION['project_browser_category'] = $form_state['values']['category'];
+  }
+  else {
+    $_SESSION['project_browser_category'] = array();
+  }
+  $_SESSION['project_browser_text'] = $form_state['values']['search_text'];
 }
 
 /**
@@ -188,6 +193,7 @@ function _project_browser_is_project_enabled($type, $name) {
  * array(
  *   'drupal_version' => '6.x', // The Major Version of Drupal that is running on the Client
  *   'text' => 'Views', // The text that was entered as the search query, or 'all'
+ *   'categories' => array() // The categories that were selected, if any
  *   'type' => 'module', // The type of project being searched
  * )
  * 
@@ -229,8 +235,8 @@ function project_browser_fetch_results($filters) {
     ));
     
     // Check for errors
-    $error = xmlrpc_error();
-    if ($error->is_error) {
+    if ($error = xmlrpc_error() AND $error->is_error) {
+      drupal_set_message(print_r($results_raw));
       drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
         array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
       continue;
@@ -264,8 +270,7 @@ function project_browser_fetch_categories($type) {
     ));
     
     // Check for errors
-    $error = xmlrpc_error();
-    if ($error->is_error) {
+    if ($error = xmlrpc_error() AND $error->is_error) {
       drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
         array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
       continue;

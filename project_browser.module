@@ -166,8 +166,13 @@ function project_browser_theme() {
     ),
     // Template for single project
     'project_browser_project' => array(
-      'variables' => array('project' => NULL),
+      'variables' => array('project' => NULL, 'first' => NULL),
       'template' => 'project_browser_project',
+    ),
+    // Template for install queue item
+    'project_browser_install_queue' => array(
+      'variables' => array('projects' => NULL),
+      'template' => 'project_browser_install_queue',
     ),
   );
 }
@@ -207,9 +212,11 @@ function project_browser_preprocess_project_browser_list(&$variables) {
   
   if (is_array($variables['projects_list']) AND !empty($variables['projects_list'])) {
     $content = '';
+    $first = TRUE;
     // Theme each individual project and add to the list
     foreach ($variables['projects_list'] as $project) {
-      $content .= theme('project_browser_project', array('project' => $project));
+      $content .= theme('project_browser_project', array('project' => $project, 'first' => $first));
+      $first = FALSE;
     }
   }
   else {
@@ -276,7 +283,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   
   $project = $variables['project'];
   
-  $variables['title'] = l(check_plain($project['title']), check_url($project['project_url']));
+  $variables['title'] = l(check_plain($project['title']), check_url($project['project url']));
   $variables['description'] = $project['description'];
   
   // Check if the project is installed

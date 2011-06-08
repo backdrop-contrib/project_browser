@@ -9,8 +9,11 @@
  * 
  * @see project_browser_preprocess_project_browser_project
  */
+
+$class = ($first) ? 'project-item-first' : 'project-item';
+ 
 ?>
-<div class="project-item">
+<div class="<?php print $class; ?>">
   <div class="project-information" >
     <div class="project-title">
       <?php print $title; ?>
@@ -23,4 +26,5 @@
       <?php print $status; ?>
      	<?php print $install; ?>
   </div>
+  <div class='clearfix'></div>
 </div>

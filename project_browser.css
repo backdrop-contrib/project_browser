@@ -3,7 +3,12 @@
 .project-item {
   border-top: 1px solid #E0E0D8;
   clear: both;
-  padding-top: 10px;
+  padding: 10px 0 10px;
+}
+
+.project-item-first {
+  clear: both;
+  padding: 0 0 10px;
 }
 
 .project-browser-install-main {

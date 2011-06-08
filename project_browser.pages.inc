@@ -18,8 +18,9 @@ function project_browser_page($type) {
   drupal_add_css(drupal_get_path('module', 'project_browser') . '/project_browser.css', array('preprocess' => FALSE));
   
   // Build the filters
+  $drupal_version = explode('.', DRUPAL_CORE_COMPATIBILITY);
   $filters = array(
-    'drupal_version' => DRUPAL_CORE_COMPATIBILITY,
+    'drupal_version' => $drupal_version[0],
     'type' => $type,
   );
   
