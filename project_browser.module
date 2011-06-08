@@ -322,6 +322,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   elseif (drupal_get_filename($project['type'], $project['name'])) {
     $variables['status'] = '<div class="install-disabled">Already downloaded</div>';
     $variables['install'] = '';
+    // FIXME - This isn't detecting the files right away... maybe a caching issue?
     // TODO - We should offer a 'remove' option to delete the project from the file system
     // TODO - We should offer an enable link that will enable the project
   }

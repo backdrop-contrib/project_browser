@@ -443,6 +443,9 @@ function project_browser_get_project_releases($project) {
  * There were no suitable functions that could be used besides 
  * drupal_form_submit('update_manager_install_form', $form_state, $project['type']);
  * and it wouldn't work because this is being run from a Batch function
+ * 
+ * @todo - Ideally, this should be in the update module as a standalone function, 
+ * to reduce coupling and duplication
  */
 function project_browser_download_project($url) {
   module_load_include('inc', 'update', 'update.manager');
@@ -568,7 +571,7 @@ function _project_browser_batch_install_release($release_name, $project, &$conte
   $result = project_browser_download_project($release['download_link']);
   
   if ($result['success']) {
-    $context['results']['successes'] = t('Successfully installed %project.', array('%project' => $project['title']));
+    $context['results']['successes'][] = t('Successfully installed %project.', array('%project' => $project['title']));
     $context['message'] = t('Installed %project...', array('%project' => $project['title']));
     
     // Add this to the session variable and remove it from the install_queue variable
@@ -577,11 +580,12 @@ function _project_browser_batch_install_release($release_name, $project, &$conte
   }
   else {
     watchdog('project_browser', 'There was an error while installing %project. 
-      @message',
-      array('@errors' => implode('<br />', $errors), '@message' => $result['message']), WATCHDOG_ERROR);
-    $context['results']['failures'] = t('Error installing %project. Errors have been logged.', array('%project' => $project['title']));
-    $context['message'] = t('Error installing %project. @message', 
-      array('%project' => $project['title'], '@message' => $result['message']));
+      !message',
+      array('%project' => $project['title'], '!message' => $result['message']), WATCHDOG_ERROR);
+    $context['results']['failures'][] = t('Error installing %project. Errors have been logged.', 
+      array('%project' => $project['title']));
+    $context['message'] = t('Error installing %project. !message', 
+      array('%project' => $project['title'], '!message' => $result['message']));
   }
 }
 
