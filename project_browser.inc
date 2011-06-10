@@ -3,7 +3,7 @@
 
 /**
  * @file
- * 
+ * Various functions that are required by project_browser
  */
 
  /**
@@ -11,12 +11,9 @@
   */
 function project_browser_get_install_list() {
   $queued_projects = project_browser_get_queued_projects();
-  // Show a list of the queued projects
-  if (!empty($queued_projects)) {
-    return theme('project_browser_install_queue', array('projects' => $queued_projects));
-  }
   
-  return t('Install queue is empty.');
+  // Show a list of the queued projects
+  return theme('project_browser_install_queue', array('projects' => $queued_projects));
 }
 
 /**
@@ -44,6 +41,8 @@ function project_browser_install_button_form_submit($form, &$form_state) {
  * 
  * @param array $project
  *   A project array object
+ * @param bool $queue
+ *   Whether this form is used for a queued project. Defaults to false
  */
 function project_browser_install_form($form, &$form_state, $project) {
   $queued_projects = project_browser_get_queued_projects();
@@ -51,7 +50,16 @@ function project_browser_install_form($form, &$form_state, $project) {
     '#type' => 'checkbox',
     '#prefix' => '<div class="install-item-prefix">'.t('Add to list').'</div>',
     '#default_value' => isset($queued_projects[$project['name']]) ? 1 : 0,
-    '#attributes' => array('onchange' => 'this.form.submit();'),
+    '#ajax' => array(
+      'callback' => 'project_browser_install_form_ajax',
+      'wrapper' => 'project-browser-install-queue',
+      'effect' => 'fade',
+      'speed' => 1000,
+      'progress' => array(
+        'type' => 'throbber',
+        'message' => '',
+      ),
+    ),
   );
   $form['project'] = array(
     '#type' => 'value',
@@ -84,6 +92,70 @@ function project_browser_install_form_submit($form, &$form_state) {
 }
 
 /**
+ * AJAX callback for the install form
+ */
+function project_browser_install_form_ajax($form, &$form_state) {
+  project_browser_install_form_submit($form, &$form_state);
+  return project_browser_get_install_list();
+}
+
+function project_browser_install_queue_ajax($form, &$form_state) {
+  project_browser_install_queue_form_submit($form, &$form_state);
+  return project_browser_get_install_list();
+}
+
+/**
+ * Shows a checkbox that will add a project to the install list
+ * 
+ * @param array $project
+ *   A project array object
+ * @param bool $queue
+ *   Whether this form is used for a queued project. Defaults to false
+ */
+function project_browser_install_queue_form($form, &$form_state) {
+  $queued_projects = project_browser_get_queued_projects();
+  
+  $form['#tree'] = TRUE;
+  
+  foreach ($queued_projects as $project) {
+    $form['projects'][$project['name']]['c_box'] = array(
+      '#type' => 'checkbox',
+      '#title' => $project['title'],
+      '#default_value' => 1,
+      '#ajax' => array(
+        'callback' => 'project_browser_install_queue_ajax',
+        'wrapper' => 'project-browser-install-queue',
+        'effect' => 'fade',
+        'speed' => 1000,
+        'progress' => array(
+          'type' => 'throbber',
+          'message' => '',
+        ),
+      ),
+    );
+      
+    $form['projects'][$project['name']]['project'] = array(
+      '#type' => 'value',
+      '#value' => $project,
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_form_submit().
+ */
+function project_browser_install_queue_form_submit($form, &$form_state) {
+  foreach ($form_state['values']['projects'] as $item) {
+    $project = $item['project'];
+    if (!$item['c_box']) {
+      project_browser_install_queue_remove($project);
+    }
+  }
+}
+
+/**
  * Form builder for the filters
  */
 function project_browser_filters_form($form, &$form_state, $type) {
@@ -96,22 +168,12 @@ function project_browser_filters_form($form, &$form_state, $type) {
   
   // Add the categories filter if there are categories
   if ($categories = project_browser_get_categories($type)) {
-    $form['category'] = array(
-      '#type' => 'fieldset',
+    $form['categories'] = array(
+      '#type' => 'checkboxes',
       '#title' => t('Categories'),
-      '#tree' => TRUE,
-      '#collapsible' => FALSE,
+      '#options' => $categories,
+      '#default_value' => isset($_SESSION['project_browser_category_filter']) ? $_SESSION['project_browser_category_filter'] : array(),
     );
-    
-    foreach ($categories as $category) {
-      $form_category = str_replace(' ', '_', $category);
-      $form['category'][$form_category] = array(
-        '#type' => 'checkbox',
-        '#title' => $category,
-        '#default_value' => isset($_SESSION['project_browser_category'][$category]) ? $_SESSION['project_browser_category'][$category] : 0,
-        '#attributes' => array('onchange' => 'this.form.submit()'),
-      );
-    }
   }
   
   $form['submit'] = array(
@@ -126,20 +188,13 @@ function project_browser_filters_form($form, &$form_state, $type) {
  * Submit handler for filters form
  */
 function project_browser_filters_form_submit($form, &$form_state) {
-  if (isset($form_state['values']['category'])) {
-    $_SESSION['project_browser_category'] = $form_state['values']['category'];
+  if (isset($form_state['values']['categories'])) {
+    $_SESSION['project_browser_category_filter'] = $form_state['values']['categories'];
   }
   else {
-    $_SESSION['project_browser_category'] = array();
+    $_SESSION['project_browser_category_filter'] = array();
   }
-  $_SESSION['project_browser_text'] = $form_state['values']['search_text'];
-}
-
-/**
- * Helper function to get available sortings.
- */
-function project_browser_sort_list() {
-  // TODO - Finish this
+  $_SESSION['project_browser_text_filter'] = $form_state['values']['search_text'];
 }
 
 /**
@@ -219,13 +274,18 @@ function project_browser_get_listed_projects() {
 /**
  * Helper function to get the currently queued projects
  */
-function project_browser_get_queued_projects() {
+function project_browser_get_queued_projects($type = NULL) {
   $projects = array();
   
   if (isset($_SESSION['project_browser_install_list'])) {
     foreach ($_SESSION['project_browser_install_list'] as $project) {
       if (is_array($project) AND !empty($project)) {
-        $projects[$project['name']] = $project;
+        if (isset($type) AND $type != $project['type']) {
+          continue;
+        }
+        else {
+          $projects[$project['name']] = $project;
+        }
       }
     }
   }

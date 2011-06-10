@@ -26,7 +26,10 @@ function project_browser_page($type) {
   
   // Add filters
   if (isset($_SESSION['project_browser_category_filter'])) {
-    $filters['categories'] = $_SESSION['project_browser_category_filter'];
+    $categories = array_filter($_SESSION['project_browser_category_filter']);
+    if (!empty($categories)) {
+      $filters['categories'] = $categories;
+    }
   }
   if (isset($_SESSION['project_browser_text_filter'])) {
     $filters['text'] = $_SESSION['project_browser_text_filter'];
@@ -62,15 +65,19 @@ function project_browser_installation_page($op) {
   
   switch ($op) {
     case 'select_versions':
+      drupal_set_title(t("Select versions"));
       $content = project_browser_installation_select_versions_page();
       break;
     case 'backup':
+      drupal_set_title(t("Backup"));
       $content = project_browser_installation_backup_page();
       break;
     case 'install':
+      drupal_set_title(t("Install"));
       $content = project_browser_installation_install_page();
       break;
-    case 'finished':
+    case 'enable':
+      drupal_set_title(t("Enable modules"));
       $content = project_browser_installation_enable_page();
       break;
   }
@@ -103,13 +110,10 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   unset($_SESSION['project_browser_install_releases_list']);
   unset($_SESSION['project_browser_installed_projects']);
   
-  $form['releases'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Select which version to install',
-    '#tree' => TRUE,
-    '#collapsible' => FALSE,
-  );
-
+  $form['#tree'] = TRUE;
+  
+  $form['releases'] = array();
+  
   foreach ($projects as $project) {
     // Get the available releases for this project
     $releases = project_browser_get_project_releases($project);
@@ -127,16 +131,17 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       $releases_list[$version] = l($release_title, $release['release_link']);
     }
     
-    $form['releases']['project-' . $project['name']] = array(
+    $form['releases'][$project['name']] = array(
       '#type' => 'fieldset',
       '#title' => $project['title'],
       '#collapsible' => FALSE,
     );
-    $form['releases']['project-' . $project['name']]['project'] = array(
+    
+    $form['releases'][$project['name']]['project'] = array(
       '#type' => 'value',
       '#value' => $project,
     );
-    $form['releases']['project-' . $project['name']]['release_name'] = array(
+    $form['releases'][$project['name']]['release_name'] = array(
       '#type' => 'radios',
       '#title' => t('Select release'),
       '#options' => $releases_list,
@@ -261,8 +266,62 @@ function project_browser_installation_install_form_submit($form, &$form_state) {
 function project_browser_installation_enable_page() {
   // TODO - Use http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/7#tableselect
   $installed_projects = project_browser_get_installed_projects();
-  dpm($installed_projects);
-  return 'Placeholder';
+  
+  return drupal_get_form('project_browser_installation_enable_form', $installed_projects);
+}
+
+/**
+ * Form builder for the select versions form
+ * 
+ * @param array $projects
+ *   An array of projects to get the releases for
+ */
+function project_browser_installation_enable_form($form, &$form_state, $projects) {
+  $form = array();
+  
+  // First unset any old data
+  unset($_SESSION['project_browser_installed_projects']);
+  
+  $headers = array(
+    array('data' => t('Title')),
+    array('data' => t('Version')),
+    array('data' => t('Dependencies')),
+  );
+  
+  $options = array();
+  
+  foreach ($projects as $project) {
+    $options[$project['name']] = array(
+      array('data' => $project['title']),
+      array('data' => 'version'),
+      array('data' => implode(', ', $project['dependencies'])),
+    );
+  }
+  
+  $form['modules'] = array(
+    '#type' => 'tableselect', 
+    '#header' => $headers, 
+    '#options' => $options, 
+    '#empty' => t('No new modules installed.'), 
+    '#multiple' => TRUE,
+    '#js_select' => TRUE,
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Enable modules'),
+  );
+  
+  return $form;
+}
+
+/**
+ * Form submit handler
+ */
+function project_browser_installation_enable_form_submit($form, &$form_state, $projects) {
+  foreach ($form_state['modules'] as $project_name => $details) {
+    dpm($project_name);
+  }
 }
 
 /**

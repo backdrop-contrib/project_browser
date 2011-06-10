@@ -213,8 +213,19 @@ function project_browser_preprocess_project_browser_install(&$variables) {
  * Add some variables for the projects install queue theme
  */
 function project_browser_preprocess_project_browser_install_queue(&$variables) {
+  $queue_html = '';
+  if (empty($variables['projects'])) {
+    $queue_html .= t('Install queue is empty.');
+  }
+  else {
+    $queue_html .= drupal_render(drupal_get_form('project_browser_install_queue_form'));
+    $queue_html .= "<div class='project-browser-install-link'>";
+    $queue_html .= drupal_render(drupal_get_form('project_browser_install_button_form'));
+    $queue_html .= "</div>";
+  }
+  
   // Add the install button
-  $variables['install_button'] = drupal_render(drupal_get_form('project_browser_install_button_form'));
+  $variables['queue_html'] = $queue_html;
 }
 
 /**
