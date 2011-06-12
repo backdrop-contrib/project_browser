@@ -28,7 +28,7 @@ function project_browser_page($type) {
   if (isset($_SESSION['project_browser_category_filter'])) {
     $categories = array_filter($_SESSION['project_browser_category_filter']);
     if (!empty($categories)) {
-      $filters['categories'] = $categories;
+      $filters['categories'] = project_browser_prepare_categories($categories, $type);
     }
   }
   if (isset($_SESSION['project_browser_text_filter'])) {

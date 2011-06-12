@@ -204,13 +204,68 @@ function project_browser_filters_form_submit($form, &$form_state) {
  *    Array containing all available categories or FALSE if no categories
  */
 function project_browser_get_categories($type) {
-  $categories = project_browser_fetch_categories($type);
+  $categories = array();
+  
+  $categories_raw = project_browser_fetch_categories($type);
+  
+  dpm($categories_raw);
+
+  if (is_array($categories_raw) AND !empty($categories_raw)) {
+    foreach ($categories_raw as $url => $modules) {
+      foreach ($modules as $module => $cats) {
+        foreach ($cats as $key => $value) {
+          // Create a new key so that there are no duplicate categories from different sites
+          $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
+          $categories[$new_key] = $value;
+        }
+      }
+    }
+  }
   
   if (is_array($categories) AND !empty($categories)) {
     ksort($categories);
     return $categories;
   }
   return FALSE;
+}
+
+/**
+ * Helper function that prepares the categories for sending to the servers as filters
+ * 
+ * @param array $raw_cats
+ *   The categories from $form_state['values']
+ * @param string $type
+ *   The type of project to prepare the categories for, eg 'module' or 'theme'
+ */
+function project_browser_prepare_categories($raw_cats, $type) {
+  $categories = project_browser_fetch_categories($type);
+  
+  // Set the value of the categories to true if it is selected
+  foreach ($categories as $url => $modules) {
+    foreach ($modules as $module => $cats) {
+      foreach ($cats as $key => $value) {
+        $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
+        if (isset($raw_cats[$new_key]) AND $raw_cats[$new_key]) {
+          $categories[$url][$module][$key] = TRUE;
+        }
+        else {
+          unset($categories[$url][$module][$key]);
+        }
+      }
+      
+      // Unset the parent if there are no children
+      if (empty($categories[$url][$module])) {
+        unset($categories[$url][$module]);
+      }
+    }
+    
+    // Unset the parent if there are no children
+    if (empty($categories[$url])) {
+      unset($categories[$url]);
+    }
+  }
+  
+  return $categories;
 }
 
 /**
@@ -389,13 +444,26 @@ function project_browser_fetch_results($filters) {
   $results = array();
   
   foreach ($servers as $url => $name) {
+    $local_filters = $filters;
+    
+    // Send only the relevant categories to the server
+    if (isset($filters['categories'])) {
+      dpm($filters);
+      if (!isset($filters['categories'][$url])) {
+        // Don't call a server for results if categories are being used, and none of them belong to the server
+        continue;
+      }
+      $local_filters['categories'] = $filters['categories'][$url];
+    }
+
     $results_raw = xmlrpc($url, array(
-      'project_browser_server.fetch_results' => array($filters),
+      'project_browser_server.fetch_results' => array($local_filters),
     ));
+    
+    dpm($results_raw);
     
     // Check for errors
     if ($error = xmlrpc_error() AND $error->is_error) {
-      drupal_set_message(print_r($results_raw));
       drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
         array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
       continue;
@@ -419,26 +487,36 @@ function project_browser_fetch_results($filters) {
  *   Returns an array of the categories
  */
 function project_browser_fetch_categories($type) {
-  $servers = project_browser_get_servers();
-  
-  $categories = array();
-  
-  foreach ($servers as $url => $name) {
-    $categories_raw = xmlrpc($url, array(
-      'project_browser_server.fetch_categories' => array($type),
-    ));
+  // Attempt to retrieve the categories from the cache
+  if ($cache = cache_get('project_browser_categories_'. $type, 'cache')) {
+    $categories = $cache->data;
+  }
+  else {
+    // Fetch the categories from the servers
+    $servers = project_browser_get_servers();
     
-    // Check for errors
-    if ($error = xmlrpc_error() AND $error->is_error) {
-      drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
-        array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
-      continue;
+    $categories = array();
+    
+    foreach ($servers as $url => $name) {
+      $categories_raw = xmlrpc($url, array(
+        'project_browser_server.fetch_categories' => array($type),
+      ));
+      
+      // Check for errors
+      if ($error = xmlrpc_error() AND $error->is_error) {
+        drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
+          array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
+        continue;
+      }
+      
+      if (is_array($categories_raw) AND !empty($categories_raw)) {
+        $categories[$url] = $categories_raw;
+      }
     }
     
-    if (is_array($categories_raw) AND !empty($categories_raw)) {
-      // Merge the results
-      $categories = array_merge($categories, $categories_raw);
-    }
+    // Cache this for 24 hours
+    // FIXME - Uncomment this when we get to production
+    // cache_set('project_browser_categories_'. $type, $categories, 'cache', strtotime("+24 hours"));
   }
   
   return $categories;
