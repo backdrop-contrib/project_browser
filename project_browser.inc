@@ -405,32 +405,39 @@ function project_browser_get_queued_releases() {
  * 
  * $filters should be an associative array with the following keys:
  * array(
- *   'drupal_version' => '6.x', // The Major Version of Drupal that is running on the Client
- *   'text' => 'Views', // The text that was entered as the search query, or 'all'
+ *   'drupal_version' => '7', // The Major Version of Drupal that is running on the Client
+ *   'text' => 'views', // The text that was entered as the search query, or '' if none
  *   'categories' => array() // The categories that were selected, if any
  *   'type' => 'module', // The type of project being searched
+ *   'page' => 3, // The zero-based page number
+ *   'requested' => 12, // How many results are requested per page
  * )
  * 
  * The project_browser_fetch_results($filters) call returns an array like this:
  * 
  * array(
- *   'views' => array( // The key is the project (unique) shortname
- *     'type' => 'module', // The type of project this is. Can be 'module' or 'theme'
- *     'title' => 'Views',
- *     'name' => 'views',
- *     'author' => 'merlinofchaos',
- *     'description' => "Long project description ...",
- *     'image' => 'http://www.example.com/image.jpg', // Absolute url to the image, if any
- *     'usage' => '542312', // How many Downloads the module has had
- *     'project url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
- *     'project status url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
- *     'last updated' => '12342523', // UNIX Timestamp of when the project was last updated
- *     'rating' => '9.6', // A rating on a scale of 1 to 10 of the project, if available
- *     'dependencies' => array( // An array of the dependencies of this module
+ *   'total' = 5, // The total number of results found for the filters
+ *   'projects' => array( // An array of projects returned for this page request
+ *     'views' => array( // A project array keyed by the machine name
+ *       'type' => 'module', // The type of project this is. Can be 'module' or 'theme'
+ *       'title' => 'Views', // The title of the project
+ *       'name' => 'views', // The machine name of the project
+ *       'author' => 'merlinofchaos', // The author's name
+ *       'description' => "Long project description ...",
+ *       'image' => 'http://www.example.com/image.jpg', // Absolute url to the image, if any
+ *       'usage' => '542312', // How many Downloads the module has had
+ *       'project url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
+ *       'project status url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
+ *       'last updated' => '12342523', // UNIX Timestamp of when the project was last updated
+ *       'maintenance status' => 'Actively maintained', // Maintenance status
+ *       'development status' => 'Under active development', // Development status
+ *       'rating' => '9.6', // A rating on a scale of 1 to 10 of the project, if available
+ *       'dependencies' => array( // An array of the dependencies of this module
  *         'ctools',
  *       ),
- *   ),
+ *     ),
  *   'name_2 => array( ... ),
+ *   ),
  * );
  * 
  * @param $filters
@@ -441,14 +448,20 @@ function project_browser_get_queued_releases() {
 function project_browser_fetch_results($filters) {
   $servers = project_browser_get_servers();
   
-  $results = array();
+  $results = array(
+    'projects' => array(),
+    'total' => 0,
+  );
   
   foreach ($servers as $url => $name) {
     $local_filters = $filters;
     
+    // FIXME - Handle when one server runs out of results before another...
+    // Only request a certain amount of results from each server to fill one page
+    $local_filters['requested'] = count($servers) / $filters['requested'];
+    
     // Send only the relevant categories to the server
     if (isset($filters['categories'])) {
-      dpm($filters);
       if (!isset($filters['categories'][$url])) {
         // Don't call a server for results if categories are being used, and none of them belong to the server
         continue;
@@ -469,9 +482,13 @@ function project_browser_fetch_results($filters) {
       continue;
     }
     
-    if (is_array($results_raw) AND !empty($results_raw)) {
+    if (isset($results_raw['total'])) {
+      $results['total'] += $results_raw['total'];
+    }
+    
+    if (isset($results_raw['projects']) AND !empty($results_raw['projects'])) {
       // Merge the results
-      $results = array_merge($results, $results_raw);
+      $results['projects'] = array_merge($results['projects'], $results_raw['projects']);
     }
   }
   

@@ -34,19 +34,36 @@ function project_browser_page($type) {
   if (isset($_SESSION['project_browser_text_filter'])) {
     $filters['text'] = $_SESSION['project_browser_text_filter'];
   }
+  $filters['requested'] = 12;
+  $filters['page'] = isset($_GET['page']) ? $_GET['page'] : 0;
   
   // Get the projects to display here based on the filters
-  $projects = project_browser_fetch_results($filters);
+  $results = project_browser_fetch_results($filters);
   
   // Save the listed projects in the session so it can be used
-  $_SESSION['project_browser_listed_projects'] = $projects;
+  $_SESSION['project_browser_listed_projects'] = $results['projects'];
   
   $list = array();
-  foreach ($projects as $project) {
+  foreach ($results['projects'] as $project) {
     $list[] = $project;
   }
   
-  return theme('project_browser_list', array('projects_list' => $list, 'type' => $type));
+  $build = array();
+  
+  $build['content'] = array(
+    '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
+    '#weight' => 1,
+  );
+  
+  // Add the pager
+  global $pager_total;
+  $pager_total = $results['total'];
+  $build['pager'] = array(
+    '#theme' => 'pager',
+    '#weight' => 5,
+  );
+  
+  return $build;
 }
   
 
