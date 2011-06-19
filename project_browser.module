@@ -26,6 +26,7 @@
  * TODO - Revamp the theme for the projects, to only show a short text with a 'More' js link
  * TODO - Show the image if it is there
  * TODO - Show the author, usage stats, and status of the project (maintained, etc)
+ * TODO - Rename the pages to 'Install modules' and 'Install themes'
  */
 
 require_once('project_browser.inc');

@@ -56,8 +56,11 @@ function project_browser_page($type) {
   );
   
   // Add the pager
-  global $pager_total;
-  $pager_total = $results['total'];
+  $maxCount = $results['total'];
+  $num_per_page = 12;
+  $page = pager_default_initialize($maxCount, $num_per_page);
+  $offset = $num_per_page * $page;
+  
   $build['pager'] = array(
     '#theme' => 'pager',
     '#weight' => 5,
