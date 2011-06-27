@@ -201,6 +201,17 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       );
     }
   }
+
+  $form['backup_warning'] = array(
+    '#type' => 'markup',
+    '#markup' => t('Back up your database and site before you continue. !link.',
+      array('!link' => l(t('Learn how'), 'http://drupal.org/node/22281'))),
+  );
+  $form['maintenance_mode'] = array(
+    '#type' => 'checkbox', 
+    '#title' => t('Perform updates with site in maintenance mode (strongly recommended)'), 
+    '#default_value' => TRUE, 
+  );
   
   $form['submit'] = array(
     '#type' => 'submit',
@@ -222,6 +233,12 @@ function project_browser_select_releases_ajax_callback($form, &$form_state) {
  * Submit handler for the select versions form
  */
 function project_browser_installation_select_versions_form_submit($form, &$form_state) {
+  // Store maintenance_mode setting so we can restore it when done.
+  $_SESSION['maintenance_mode'] = variable_get('maintenance_mode', FALSE);
+  if ($form_state['values']['maintenance_mode'] == TRUE) {
+    variable_set('maintenance_mode', TRUE);
+  }
+  
   foreach ($form_state['values']['releases'] as $item) {
     // Load the selected release
     if ($release = project_browser_get_release($item['release_name'], $item['project'])) {
@@ -339,6 +356,9 @@ function project_browser_installation_enable_page() {
  *   An array of projects to get the releases for
  */
 function project_browser_installation_enable_form($form, &$form_state, $projects) {
+  // Restore the maintenance mode to what it was at the end
+  variable_set('maintenance_mode', $_SESSION['maintenance_mode']);
+  
   $modules = system_rebuild_module_data();
   
   $form['instructions'] = array(
@@ -355,28 +375,34 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
     if ($project['type'] == 'module') {
       $dependency_check = TRUE;
       $dependencies = array();
-      foreach ($modules[$project['name']]->info['dependencies'] as $dependency) {
-        if (isset($modules[$dependency])) {
-          $dependencies[] = $modules[$dependency]->info['name'] .' ('. t('Installed') .')';
+      if (isset($modules[$project['name']])) {
+        foreach ($modules[$project['name']]->info['dependencies'] as $dependency) {
+          if (isset($modules[$dependency])) {
+            $dependencies[] = $modules[$dependency]->info['name'] .' ('. t('Installed') .')';
+          }
+          else {
+            $dependency_check = FALSE;
+            $dependencies[] = $dependency .' ('. t('Missing') .')';
+          }
+        }
+        if ($dependency_check) {
+          $options[$project['name']] = array(
+            array('data' => $modules[$project['name']]->info['name']),
+            array('data' => $modules[$project['name']]->info['version']),
+            array('data' => implode(', ', $dependencies)),
+          );
         }
         else {
-          $dependency_check = FALSE;
-          $dependencies[] = $dependency .' ('. t('Missing') .')';
+          $missing[$project['name']] = array(
+            array('data' => $modules[$project['name']]->info['name']),
+            array('data' => $modules[$project['name']]->info['version']),
+            array('data' => implode(', ', $dependencies)),
+          );
         }
       }
-      if ($dependency_check) {
-        $options[$project['name']] = array(
-          array('data' => $modules[$project['name']]->info['name']),
-          array('data' => $modules[$project['name']]->info['version']),
-          array('data' => implode(', ', $dependencies)),
-        );
-      }
       else {
-        $missing[$project['name']] = array(
-          array('data' => $modules[$project['name']]->info['name']),
-          array('data' => $modules[$project['name']]->info['version']),
-          array('data' => implode(', ', $dependencies)),
-        );
+        drupal_set_message(t('There was an error getting information for @module',
+          array('@module' => $project['name'])), 'error');
       }
     }
   }
