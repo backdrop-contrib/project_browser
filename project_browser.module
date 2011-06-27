@@ -11,7 +11,6 @@
  * 
  * TODO - Add a filter to let users select which server to use, or all
  * TODO - Add a context to pages showing the filters currently used
- * TODO - Finish the enable project workflow
  * TODO - Add a setting to put the site into maintenance mode during install process
  * TODO - Add an action link to the Appearance page that goes to themes
  * TODO - Replace the 'Install a module' link with the Project Browser link
@@ -22,11 +21,14 @@
  * TODO - Add a 'More' link to show the extra filters
  * TODO - Select the recommended release for a project by default, and let users
  *   change it if they want to with a 'Change' AJAX link
- * TODO - Fix the Install button to work with AJAX
  * TODO - Revamp the theme for the projects, to only show a short text with a 'More' js link
  * TODO - Show the image if it is there
  * TODO - Show the author, usage stats, and status of the project (maintained, etc)
  * TODO - Rename the pages to 'Install modules' and 'Install themes'
+ * TODO - Show the total number of results returned at the top, and which ones are being shown
+ * + Cleaned up the install list markup using theme_item_list
+ * + Fixed the Install button to work with AJAX
+ * + Finished the enable project workflow
  */
 
 require_once('project_browser.inc');

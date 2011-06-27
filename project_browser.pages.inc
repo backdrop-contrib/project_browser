@@ -234,17 +234,19 @@ function project_browser_installation_install_form($form, &$form_state, $release
   $form['releases'] = array(
     '#type' => 'fieldset',
     '#title' => t('Install'),
-    '#description' => t('You are about to install the following projects.'),
+    '#description' => t('You are about to install the following projects:'),
     '#tree' => TRUE,
     '#collapsible' => FALSE,
   );
 
   foreach ($releases as $release_name => $project) {
-    $form['releases'][$release_name] = array(
-      '#type' => 'item',
-      '#markup' => $project['title'] . ' ' . $release_name,
-    );
+    $items[] = $project['title'] . ' ' . $release_name;
   }
+  
+  $form['releases']['items'] = array(
+    '#type' => 'item',
+    '#markup' => theme('item_list', array('items' => $items)),
+  );
   
   $form['submit'] = array(
     '#type' => 'submit',
@@ -284,7 +286,6 @@ function project_browser_installation_install_form_submit($form, &$form_state) {
  * Show a form which lets the user enable the newly installed projects
  */
 function project_browser_installation_enable_page() {
-  // TODO - Use http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/7#tableselect
   $installed_projects = project_browser_get_installed_projects();
   
   return drupal_get_form('project_browser_installation_enable_form', $installed_projects);
@@ -297,40 +298,85 @@ function project_browser_installation_enable_page() {
  *   An array of projects to get the releases for
  */
 function project_browser_installation_enable_form($form, &$form_state, $projects) {
-  $form = array();
+  $modules = system_rebuild_module_data();
   
-  // First unset any old data
-  unset($_SESSION['project_browser_installed_projects']);
+  $form['instructions'] = array(
+    '#type' => 'item',
+    '#markup' => t('The projects you selected have been successfully installed. 
+      If you installed any new modules, you may enable them using the form below 
+      or on the main !link page.', array('!link' => l(t('Modules'), 'admin/modules'))),
+  );
   
+  $options = array();
+  $missing = array();
+  
+  foreach ($projects as $project) {
+    if ($project['type'] == 'module') {
+      $dependency_check = TRUE;
+      $dependencies = array();
+      foreach ($modules[$project['name']]->info['dependencies'] as $dependency) {
+        if (isset($modules[$dependency])) {
+          $dependencies[] = $modules[$dependency]->info['name'] .' ('. t('Installed') .')';
+        }
+        else {
+          $dependency_check = FALSE;
+          $dependencies[] = $dependency .' ('. t('Missing') .')';
+        }
+      }
+      if ($dependency_check) {
+        $options[$project['name']] = array(
+          array('data' => $modules[$project['name']]->info['name']),
+          array('data' => $modules[$project['name']]->info['version']),
+          array('data' => implode(', ', $dependencies)),
+        );
+      }
+      else {
+        $missing[$project['name']] = array(
+          array('data' => $modules[$project['name']]->info['name']),
+          array('data' => $modules[$project['name']]->info['version']),
+          array('data' => implode(', ', $dependencies)),
+        );
+      }
+    }
+  }
+
   $headers = array(
     array('data' => t('Title')),
     array('data' => t('Version')),
     array('data' => t('Dependencies')),
   );
   
-  $options = array();
-  
-  foreach ($projects as $project) {
-    $options[$project['name']] = array(
-      array('data' => $project['title']),
-      array('data' => 'version'),
-      array('data' => implode(', ', $project['dependencies'])),
+  if (!empty($options)) {
+    $form['modules'] = array(
+      '#type' => 'tableselect', 
+      '#title' => t('Enable modules'),
+      '#description' => t('Select which modules you would like to enable.'),
+      '#header' => $headers, 
+      '#options' => $options, 
+      '#empty' => t('No new modules installed.'), 
+      '#multiple' => TRUE,
+      '#js_select' => TRUE,
+      '#weight' => 1,
+    );
+    
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#submit' => array('project_browser_installation_enable_form_submit'),
+      '#value' => t('Enable modules'),
+      '#weight' => 99,
     );
   }
   
-  $form['modules'] = array(
-    '#type' => 'tableselect', 
-    '#header' => $headers, 
-    '#options' => $options, 
-    '#empty' => t('No new modules installed.'), 
-    '#multiple' => TRUE,
-    '#js_select' => TRUE,
-  );
-  
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Enable modules'),
-  );
+  if (!empty($missing)) {
+    $form['missing'] = array(
+      '#type' => 'item', 
+      '#title' => t('Missing Dependencies'),
+      '#description' => t('These modules are missing one or more dependencies, 
+        and so cannot be enabled.'),
+      '#markup' => theme('table', array('header' => $headers, 'rows' => $missing)), 
+      '#weight' => 2,
+    );
+  }
   
   return $form;
 }
@@ -338,10 +384,19 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
 /**
  * Form submit handler
  */
-function project_browser_installation_enable_form_submit($form, &$form_state, $projects) {
-  foreach ($form_state['modules'] as $project_name => $details) {
-    dpm($project_name);
+function project_browser_installation_enable_form_submit($form, &$form_state) {
+  $enable_queue = array_filter($form_state['values']['modules']);
+  // TODO - Enable these all at once?
+  // module_enable($enable_queue);
+  
+  // Enable the modules one by one
+  foreach ($enable_queue as $project_name) {
+    if (!module_enable(array($project_name))) {
+      drupal_set_message(t('Error installing a module: @module', array('@module' => $project_name)), 'error');
+    }
   }
+  
+  drupal_goto('admin/modules');
 }
 
 /**

@@ -8,7 +8,7 @@
  * 
  * 
  * 
- * @see project_preprocess_project_browser_install()
+ * @see project_browser_preprocess_project_browser_install()
  */
 ?>
 

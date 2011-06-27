@@ -24,16 +24,9 @@ function project_browser_install_button_form($form, &$form_state) {
     '#type' => 'submit',
     '#value' => 'Install',
   );
+  $form['#action'] = url('admin/modules/project_browser/install/select_versions');
   
   return $form;
-}
-
-/**
- * Implements hook_form_submit().
- */
-function project_browser_install_button_form_submit($form, &$form_state) {
-  // Redirect to the install page
-  drupal_goto('admin/modules/project_browser/install/select_versions');
 }
 
 /**
@@ -207,8 +200,6 @@ function project_browser_get_categories($type) {
   $categories = array();
   
   $categories_raw = project_browser_fetch_categories($type);
-  
-  dpm($categories_raw);
 
   if (is_array($categories_raw) AND !empty($categories_raw)) {
     foreach ($categories_raw as $url => $modules) {
@@ -472,8 +463,6 @@ function project_browser_fetch_results($filters) {
     $results_raw = xmlrpc($url, array(
       'project_browser_server.fetch_results' => array($local_filters),
     ));
-    
-    dpm($results_raw);
     
     // Check for errors
     if ($error = xmlrpc_error() AND $error->is_error) {
