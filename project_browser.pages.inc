@@ -136,11 +136,21 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   
   foreach ($projects as $project) {
     // Get the available releases for this project
-    $releases = project_browser_get_project_releases($project);
+    $release_data = project_browser_get_project_release_data($project);
+    
+    // We use the update module to calculate the recommended version
+    $project_data = array(
+      'existing_major' => 0,
+      'existing_version' => 0,
+      'install_type' => '',
+    );
+    module_load_include('inc', 'update', 'update.compare');
+    update_calculate_project_update_status($project, $project_data, $release_data);
+    // dpm($project_data);
 
     $releases_list = array();
     
-    foreach ($releases as $version => $release) {
+    foreach ($release_data['releases'] as $version => $release) {
       $release_title = t("@version - @date", array(
         '@version' => $release['version'],
         '@date' => format_date($release['date'], 'custom', 'M j, Y'),
@@ -155,18 +165,41 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       '#type' => 'fieldset',
       '#title' => $project['title'],
       '#collapsible' => FALSE,
+      '#prefix' => '<div id="project-browser-select-versions-'. $project['name'] .'">',
+      '#suffix' => '</div>',
     );
     
     $form['releases'][$project['name']]['project'] = array(
       '#type' => 'value',
       '#value' => $project,
     );
+    $recommended_releases = array();
+    $recommended_releases[$project_data['recommended']] = $releases_list[$project_data['recommended']];
+    
     $form['releases'][$project['name']]['release_name'] = array(
       '#type' => 'radios',
-      '#title' => t('Select release'),
-      '#options' => $releases_list,
+      '#title' => t('Recommended Release'),
+      '#options' => $recommended_releases,
+      '#default_value' => $project_data['recommended'],
       '#required' => TRUE,
     );
+    if (isset($form_state['values']['releases'][$project['name']]['more']) AND $form_state['values']['releases'][$project['name']]['more']) {
+      $form['releases'][$project['name']]['release_name']['#title'] = t('Select release');
+      $form['releases'][$project['name']]['release_name']['#options'] = $releases_list;
+    }
+    else {
+      $form['releases'][$project['name']]['more'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Show more releases'),
+        '#default_value' => isset($form_state['values']['releases'][$project['name']]['more']) ? $form_state['values']['releases'][$project['name']]['more'] : FALSE,
+        '#ajax' => array(
+            'callback' => 'project_browser_select_releases_ajax_callback',
+            'wrapper' => 'project-browser-select-versions-'. $project['name'],
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+      );
+    }
   }
   
   $form['submit'] = array(
@@ -175,6 +208,14 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   );
   
   return $form;
+}
+
+/**
+ * Serve the extra releases via AJAX
+ */
+function project_browser_select_releases_ajax_callback($form, &$form_state) {
+  $project = $form_state['triggering_element']['#parents'][1];
+  return $form['releases'][$project];
 }
 
 /**
@@ -196,9 +237,9 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
  * Get a release from a project and a release_name
  */
 function project_browser_get_release($release_name, $project) {
-  $releases = project_browser_get_project_releases($project);
+  $release_data = project_browser_get_project_release_data($project);
   
-  return isset($releases[$release_name]) ? $releases[$release_name] : FALSE;
+  return isset($release_data['releases'][$release_name]) ? $release_data['releases'][$release_name] : FALSE;
 }
 
 /**

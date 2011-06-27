@@ -26,9 +26,6 @@
  * TODO - Show the author, usage stats, and status of the project (maintained, etc)
  * TODO - Rename the pages to 'Install modules' and 'Install themes'
  * TODO - Show the total number of results returned at the top, and which ones are being shown
- * + Cleaned up the install list markup using theme_item_list
- * + Fixed the Install button to work with AJAX
- * + Finished the enable project workflow
  */
 
 require_once('project_browser.inc');

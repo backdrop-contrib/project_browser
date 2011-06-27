@@ -560,7 +560,7 @@ function project_browser_get_servers() {
  * @return array
  *   An array of releases for this project
  */
-function project_browser_get_project_releases($project) {
+function project_browser_get_project_release_data($project) {
   $releases = array();
   // FIXME - Change the 'type' key to 'project_type'
   $project['project_type'] = $project['type'];
@@ -569,11 +569,11 @@ function project_browser_get_project_releases($project) {
   if (_update_process_fetch_task($project)) {
     $data = _update_cache_get('available_releases::' . $project['name']);
     if (isset($data->data) AND isset($data->data['releases']) AND is_array($data->data['releases'])) {
-      $releases = $data->data['releases'];
+      return $data->data;
     }
   }
   
-  return $releases;
+  return FALSE;
 }
 
 // ======================================
