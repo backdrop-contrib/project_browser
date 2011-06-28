@@ -48,22 +48,32 @@ function project_browser_page($type) {
     $list[] = $project;
   }
   
-  $build = array();
-  
-  $build['content'] = array(
-    '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
-    '#weight' => 1,
-  );
-  
   // Add the pager
-  $maxCount = $results['total'];
+  $total = $results['total'];
   $num_per_page = 12;
-  $page = pager_default_initialize($maxCount, $num_per_page);
+  $page = pager_default_initialize($total, $num_per_page);
   $offset = $num_per_page * $page;
+  $start = ($total) ? $offset + 1 : 0;
+  $finish = $offset + $num_per_page;
+  if ($finish > $total) {
+    $finish = $total;
+  }
   
-  $build['pager'] = array(
-    '#theme' => 'pager',
-    '#weight' => 5,
+  $build = array();
+  $build['content'] = array(
+    'project_browser_header' => array(
+      '#markup' => t('Showing @start to @finish of @total.', array(
+        '@start' => $start, '@finish' => $finish, '@total' => $total)),
+      '#weight' => 1,
+    ),
+    'project_browser_list' => array(
+      '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
+      '#weight' => 2,
+    ),
+    'pager' => array(
+      '#theme' => 'pager',
+      '#weight' => 5,
+    ),
   );
   
   return $build;

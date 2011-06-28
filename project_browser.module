@@ -11,18 +11,13 @@
  * 
  * TODO - Add a filter to let users select which server to use, or all
  * TODO - Add a context to pages showing the filters currently used
- * TODO - Add an action link to the Appearance page that goes to themes
- * TODO - Replace the 'Install a module' link with the Project Browser link
- * TODO - Make the old install a module page a tab on the project browser page 
- *   called 'Install manually'
  * TODO - Add a page that lets users select which categories are shown by default
  * TODO - Add a sorting mechanism filter
  * TODO - Add a 'More' link to show the extra filters
  * TODO - Revamp the theme for the projects, to only show a short text with a 'More' js link
  * TODO - Show the image if it is there
  * TODO - Show the author, usage stats, and status of the project (maintained, etc)
- * TODO - Rename the pages to 'Install modules' and 'Install themes'
- * TODO - Show the total number of results returned at the top, and which ones are being shown
+ * TODO - Fix a bug where the same filters are used for themes and modules in the session... split this
  */
 
 require_once('project_browser.inc');
@@ -117,14 +112,53 @@ function project_browser_menu() {
  * This is used to put the 'Project Browser' action on the 'Modules' page
  */
 function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path) {
-  if ($root_path == 'admin/modules') {
-    $item = menu_get_item('admin/modules/project_browser');
-    if ($item['access']) {
-      $data['actions']['output'][] = array(
-        '#theme' => 'menu_local_action',
-        '#link' => $item,
-      );
-    }
+  switch ($root_path) {
+    case 'admin/modules':
+      // TODO - Remove this once we get it fixed in Drupal 8
+      // Unset the install theme page
+      foreach ($data['actions']['output'] as $num => $item) {
+        if ($item['#link']['path'] == 'admin/modules/install') {
+          unset($data['actions']['output'][$num]);
+        }
+      }
+      $item = menu_get_item('admin/modules/project_browser/modules');
+      if ($item['access']) {
+        $item['title'] = t('Install new modules');
+        $data['actions']['output'][] = array(
+          '#theme' => 'menu_local_action',
+          '#link' => $item,
+        );
+      }
+      break;
+    case 'admin/modules/project_browser':
+    case 'admin/modules/project_browser/modules':
+    case 'admin/modules/project_browser/themes':
+      $item = menu_get_item('admin/modules/install');
+      if ($item['access']) {
+        $item['title'] = t('Install manually');
+        $data['actions']['output'][] = array(
+          '#theme' => 'menu_local_action',
+          '#link' => $item,
+        );
+      }
+      break;
+    case 'admin/appearance':
+      // TODO - Remove this once we get it fixed in Drupal 8
+      // Unset the install theme page
+      foreach ($data['actions']['output'] as $num => $item) {
+        if ($item['#link']['path'] == 'admin/appearance/install') {
+          unset($data['actions']['output'][$num]);
+        }
+      }
+      $item = menu_get_item('admin/modules/project_browser/themes');
+      if ($item['access']) {
+        $item['title'] = t('Install new themes');
+        $data['actions']['output'][] = array(
+          '#theme' => 'menu_local_action',
+          '#link' => $item,
+        );
+      }
+      break;
   }
 }
 

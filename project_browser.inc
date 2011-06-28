@@ -449,7 +449,7 @@ function project_browser_fetch_results($filters) {
     
     // FIXME - Handle when one server runs out of results before another...
     // Only request a certain amount of results from each server to fill one page
-    $local_filters['requested'] = count($servers) / $filters['requested'];
+    $local_filters['requested'] = floor($filters['requested'] / count($servers));
     
     // Send only the relevant categories to the server
     if (isset($filters['categories'])) {
