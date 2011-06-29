@@ -14,10 +14,17 @@ $class = ($first) ? 'project-item-first' : 'project-item';
  
 ?>
 <div class="<?php print $class; ?>">
+  <?php if ($image) { ?>
+    <div class='project-image'>
+      <img src='<?php print $image; ?>' />
+    </div>
+  <?php } ?>
+  
   <div class="project-information" >
     <div class="project-title">
       <?php print $title; ?>
     </div>
+    
     <div class="project-description">
       <?php print $description; ?>
     </div>

@@ -6,7 +6,7 @@
  * Project Browser module.
  * Authored by Leighton Whiting for Google Summer of Code 2011
  * 
- * This module will provide a new UI for admins to easily browse modules and themes from their
+ * This module provides a new UI for admins to easily browse modules and themes from their
  * admin pages, and install them.
  * 
  * TODO - Add a filter to let users select which server to use, or all
@@ -15,9 +15,10 @@
  * TODO - Add a sorting mechanism filter
  * TODO - Add a 'More' link to show the extra filters
  * TODO - Revamp the theme for the projects, to only show a short text with a 'More' js link
- * TODO - Show the image if it is there
  * TODO - Show the author, usage stats, and status of the project (maintained, etc)
- * TODO - Fix a bug where the same filters are used for themes and modules in the session... split this
+ * FIXME - Fix a bug where the same filters are used for themes and modules in the session... split this
+ * FIXME - Figure out why some themes are showing as installed correctly but others are not
+ * FIXME - Uncheck the box in the main list if the box is unchecked in the queue
  */
 
 require_once('project_browser.inc');
@@ -114,7 +115,6 @@ function project_browser_menu() {
 function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path) {
   switch ($root_path) {
     case 'admin/modules':
-      // TODO - Remove this once we get it fixed in Drupal 8
       // Unset the install theme page
       foreach ($data['actions']['output'] as $num => $item) {
         if ($item['#link']['path'] == 'admin/modules/install') {
@@ -143,7 +143,6 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
       }
       break;
     case 'admin/appearance':
-      // TODO - Remove this once we get it fixed in Drupal 8
       // Unset the install theme page
       foreach ($data['actions']['output'] as $num => $item) {
         if ($item['#link']['path'] == 'admin/appearance/install') {
@@ -372,8 +371,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   $project = $variables['project'];
   
   $variables['title'] = l(check_plain($project['title']), check_url($project['project url']));
-  $variables['description'] = _filter_htmlcorrector($project['description']);
-  
+  $variables['description'] = filter_xss($project['description']);
   $variables['image'] = $project['image'];
   
   // Check if the project is installed
@@ -384,12 +382,9 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   elseif (drupal_get_filename($project['type'], $project['name'])) {
     $variables['status'] = '<div class="install-disabled">Already downloaded</div>';
     $variables['install'] = '';
-    // FIXME - This isn't detecting the files right away... maybe a caching issue?
-    // TODO - We should offer a 'remove' option to delete the project from the file system
-    // TODO - We should offer an enable link that will enable the project
   }
   else {
-    $variables['status'] = '<div class="install-enabled">Install</div>';
+    $variables['status'] = '';
     $install_form = drupal_get_form('project_browser_' . $project['name'] . '_install_form', $project);
     $variables['install'] = drupal_render($install_form);
   }

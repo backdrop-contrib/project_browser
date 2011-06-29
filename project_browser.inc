@@ -41,7 +41,7 @@ function project_browser_install_form($form, &$form_state, $project) {
   $queued_projects = project_browser_get_queued_projects();
   $form['install'] = array(
     '#type' => 'checkbox',
-    '#prefix' => '<div class="install-item-prefix">'.t('Add to list').'</div>',
+    '#title' => t('Install'),
     '#default_value' => isset($queued_projects[$project['name']]) ? 1 : 0,
     '#ajax' => array(
       'callback' => 'project_browser_install_form_ajax',

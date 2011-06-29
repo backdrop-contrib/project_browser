@@ -1,14 +1,49 @@
 /* $Id$ */
 
+a.show-more {
+  float: right;
+}
+
+.project-image {
+  float: left;
+  margin-right: 10px;
+}
+
+.project-image img {
+  max-height: 150px;
+  max-width: 200px;
+}
+
+.project-description {
+  margin: 5px;
+}
+
+#project-browser-main ul, #project-browser-main ol {
+  list-style-position: inside;
+}
+
 .project-item {
   border-top: 1px solid #E0E0D8;
   clear: both;
   padding: 10px;
+  position: relative;
 }
 
 .project-item-first {
   clear: both;
   padding: 10px;
+  position: relative;
+}
+
+div.project-status {
+  position: absolute;
+  right: 10px;
+  text-align: right;
+  top: 5px;
+}
+
+div.project-information {
+  
 }
 
 .project-browser-install-main {
@@ -29,18 +64,6 @@
   float: left;
   width: 19%;
   padding: 10px;
-}
-
-div.project-information {
-  float: left;
-  width: 80%;
-}
-
-div.project-status {
-  float: right;
-  text-align: right;
-  width: 20%;
-  margin-bottom: 10px;
 }
 
 div.project-title {
