@@ -185,32 +185,35 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       '#type' => 'value',
       '#value' => $project,
     );
-    $recommended_releases = array();
-    $recommended_releases[$project_data['recommended']] = $releases_list[$project_data['recommended']];
     
     $form['releases'][$project['name']]['release_name'] = array(
       '#type' => 'radios',
-      '#title' => t('Recommended Release'),
-      '#options' => $recommended_releases,
-      '#default_value' => $project_data['recommended'],
+      '#title' => t('Select release'),
+      '#options' => $releases_list,
+      '#default_value' => key($releases_list),
       '#required' => TRUE,
     );
-    if (isset($form_state['values']['releases'][$project['name']]['more']) AND $form_state['values']['releases'][$project['name']]['more']) {
-      $form['releases'][$project['name']]['release_name']['#title'] = t('Select release');
-      $form['releases'][$project['name']]['release_name']['#options'] = $releases_list;
-    }
-    else {
-      $form['releases'][$project['name']]['more'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Show more releases'),
-        '#default_value' => isset($form_state['values']['releases'][$project['name']]['more']) ? $form_state['values']['releases'][$project['name']]['more'] : FALSE,
-        '#ajax' => array(
+    if (isset($project_data['recommended'])) {
+      $recommended_releases = array();
+      $recommended_releases[$project_data['recommended']] = $releases_list[$project_data['recommended']];
+      $form['releases'][$project['name']]['release_name']['#default_value'] = $project_data['recommended'];
+      
+      if (!isset($form_state['values']['releases'][$project['name']]['more']) OR !$form_state['values']['releases'][$project['name']]['more']) {
+        $form['releases'][$project['name']]['release_name']['#title'] = t('Recommended release');
+        $form['releases'][$project['name']]['release_name']['#options'] = $recommended_releases;
+        
+        $form['releases'][$project['name']]['more'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Show more releases'),
+          '#default_value' => isset($form_state['values']['releases'][$project['name']]['more']) ? $form_state['values']['releases'][$project['name']]['more'] : FALSE,
+          '#ajax' => array(
             'callback' => 'project_browser_select_releases_ajax_callback',
             'wrapper' => 'project-browser-select-versions-'. $project['name'],
             'method' => 'replace',
             'effect' => 'fade',
-        ),
-      );
+          ),
+        );
+      }
     }
   }
 
