@@ -43,6 +43,7 @@ function project_browser_install_form($form, &$form_state, $project) {
     '#type' => 'checkbox',
     '#title' => t('Install'),
     '#default_value' => isset($queued_projects[$project['name']]) ? 1 : 0,
+    '#attributes' => array('class' => array('install-checkbox-' . $project['name'])),
     '#ajax' => array(
       'callback' => 'project_browser_install_form_ajax',
       'wrapper' => 'project-browser-install-queue',
@@ -92,9 +93,29 @@ function project_browser_install_form_ajax($form, &$form_state) {
   return project_browser_get_install_list();
 }
 
+/**
+ * AJAX callback for the install queue form checkboxes
+ */
 function project_browser_install_queue_ajax($form, &$form_state) {
-  project_browser_install_queue_form_submit($form, &$form_state);
-  return project_browser_get_install_list();
+  $commands = array();
+  
+  foreach ($form_state['values']['projects'] as $item) {
+    $project = $item['project'];
+    if (!$item['c_box']) {
+      // If the checkbox is unchecked, we remove it from the install queue
+      project_browser_install_queue_remove($project);
+      // We also want to uncheck the checkbox on the project listing if it is present on the page
+      $commands[] = ajax_command_invoke('.install-checkbox-' . $project['name'], 'attr', array('checked', FALSE));
+    }
+  }
+  
+  // Replace the queue with the new queue html
+  $commands[] = ajax_command_replace(NULL, project_browser_get_install_list());
+  
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
 }
 
 /**

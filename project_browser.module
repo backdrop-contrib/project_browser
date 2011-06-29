@@ -14,10 +14,8 @@
  * TODO - Add a page that lets users select which categories are shown by default
  * TODO - Add a sorting mechanism filter
  * TODO - Add a 'More' link to show the extra filters
- * TODO - Revamp the theme for the projects, to only show a short text with a 'More' js link
  * TODO - Show the author, usage stats, and status of the project (maintained, etc)
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
- * FIXME - Uncheck the box in the main list if the box is unchecked in the queue
  */
 
 require_once('project_browser.inc');
