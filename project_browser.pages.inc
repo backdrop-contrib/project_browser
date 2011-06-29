@@ -27,14 +27,14 @@ function project_browser_page($type) {
   );
   
   // Add filters
-  if (isset($_SESSION['project_browser_category_filter'])) {
-    $categories = array_filter($_SESSION['project_browser_category_filter']);
+  if (isset($_SESSION['project_browser_category_filter_' . $type])) {
+    $categories = array_filter($_SESSION['project_browser_category_filter_' . $type]);
     if (!empty($categories)) {
       $filters['categories'] = project_browser_prepare_categories($categories, $type);
     }
   }
-  if (isset($_SESSION['project_browser_text_filter'])) {
-    $filters['text'] = $_SESSION['project_browser_text_filter'];
+  if (isset($_SESSION['project_browser_text_filter_' . $type])) {
+    $filters['text'] = $_SESSION['project_browser_text_filter_' . $type];
   }
   $filters['requested'] = 12;
   $filters['page'] = isset($_GET['page']) ? $_GET['page'] : 0;

@@ -156,7 +156,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
     '#type' => 'textfield',
     '#size' => '30',
     '#title' => t('Search String'),
-    '#default_value' => isset($_SESSION['project_browser_text_filter']) ? $_SESSION['project_browser_text_filter'] : '',
+    '#default_value' => isset($_SESSION['project_browser_text_filter_' . $type]) ? $_SESSION['project_browser_text_filter_' . $type] : '',
   );
   
   // Add the categories filter if there are categories
@@ -165,9 +165,14 @@ function project_browser_filters_form($form, &$form_state, $type) {
       '#type' => 'checkboxes',
       '#title' => t('Categories'),
       '#options' => $categories,
-      '#default_value' => isset($_SESSION['project_browser_category_filter']) ? $_SESSION['project_browser_category_filter'] : array(),
+      '#default_value' => isset($_SESSION['project_browser_category_filter_' . $type]) ? $_SESSION['project_browser_category_filter_' . $type] : array(),
     );
   }
+  
+  $form['project_type'] = array(
+    '#type' => 'value',
+    '#value' => $type,
+  );
   
   $form['submit'] = array(
     '#type' => 'submit',
@@ -181,13 +186,14 @@ function project_browser_filters_form($form, &$form_state, $type) {
  * Submit handler for filters form
  */
 function project_browser_filters_form_submit($form, &$form_state) {
+  $type = $form_state['values']['project_type'];
   if (isset($form_state['values']['categories'])) {
-    $_SESSION['project_browser_category_filter'] = $form_state['values']['categories'];
+    $_SESSION['project_browser_category_filter_' . $type] = $form_state['values']['categories'];
   }
   else {
-    $_SESSION['project_browser_category_filter'] = array();
+    $_SESSION['project_browser_category_filter_' . $type] = array();
   }
-  $_SESSION['project_browser_text_filter'] = $form_state['values']['search_text'];
+  $_SESSION['project_browser_text_filter_' . $type] = $form_state['values']['search_text'];
 }
 
 /**
