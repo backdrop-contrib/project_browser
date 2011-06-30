@@ -4,6 +4,22 @@ a.show-more {
   float: right;
 }
 
+.project-extra {
+  clear: both;
+  color: gray;
+  text-align: right;
+}
+
+.project-author {
+  color: gray;
+  font-size: 0.9em;
+}
+
+.project-updated {
+  color: gray;
+  font-size: 0.9em;
+}
+
 .project-image {
   float: left;
   margin-right: 10px;

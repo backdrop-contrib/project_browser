@@ -1,6 +1,6 @@
 (function ($) {
   // The height of the content block when it's not expanded
-  var adjustheight = 100;
+  var adjustheight = 80;
   // The "more" link text
   var moreText = "More";
   // The "less" link text
