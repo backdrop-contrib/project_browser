@@ -180,13 +180,28 @@ function project_browser_filters_form($form, &$form_state, $type) {
     '#default_value' => isset($_SESSION['project_browser_text_filter_' . $type]) ? $_SESSION['project_browser_text_filter_' . $type] : '',
   );
   
+  $show_all = isset($form_state['values']['more-categories']) ? $form_state['values']['more-categories'] : FALSE;
+  
   // Add the categories filter if there are categories
-  if ($categories = project_browser_get_categories($type, TRUE)) {
+  if ($categories = project_browser_get_categories($type, !$show_all)) {
     $form['categories'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Categories'),
       '#options' => $categories,
+      '#prefix' => '<div id="project-browser-filters-categories">',
+      '#suffix' => '</div>',
       '#default_value' => isset($_SESSION['project_browser_category_filter_' . $type]) ? $_SESSION['project_browser_category_filter_' . $type] : array(),
+    );
+    $form['more-categories'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show all'),
+      '#default_value' => $show_all,
+      '#ajax' => array(
+        'callback' => 'project_browser_more_categories_ajax_callback',
+        'wrapper' => 'project-browser-filters-categories',
+        'method' => 'replace',
+        'effect' => 'fade',
+      ),
     );
   }
   
@@ -201,6 +216,10 @@ function project_browser_filters_form($form, &$form_state, $type) {
   );
   
   return $form;
+}
+
+function project_browser_more_categories_ajax_callback($form, &$form_state) {
+  return $form['categories'];
 }
 
 /**

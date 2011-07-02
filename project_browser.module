@@ -12,7 +12,6 @@
  * TODO - Add a filter to let users select which server to use, or all
  * TODO - Add a context to pages showing the filters currently used
  * TODO - Add a sorting mechanism filter
- * TODO - Add a 'More' link to show the extra filters
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
  */
 
