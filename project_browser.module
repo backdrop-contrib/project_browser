@@ -11,7 +11,6 @@
  * 
  * TODO - Add a filter to let users select which server to use, or all
  * TODO - Add a context to pages showing the filters currently used
- * TODO - Add a page that lets users select which categories are shown by default
  * TODO - Add a sorting mechanism filter
  * TODO - Add a 'More' link to show the extra filters
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
@@ -51,15 +50,22 @@ function project_browser_permission() {
  */
 function project_browser_menu() {
   $items = array();
-  $items['admin/config/project_browser'] = array(
-    'title' => 'Project Browser Settings',
+  $items['admin/config/project_browser/main-settings'] = array(
+    'title' => 'Server Settings',
     'description' => 'Set the various Project Browser Settings here',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('project_browser_admin'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_LOCAL_ACTION,
-    '_tab' => TRUE,
-    'tab_parent' => 'admin/modules/project_browser',
+    'context' => MENU_CONTEXT_INLINE,
+  );
+  $items['admin/modules/project_browser/filters/%'] = array(
+    'title' => 'Filters Settings',
+    'description' => 'Set up the Filters Here',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('project_browser_filters_admin', 4),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_LOCAL_ACTION,
     'context' => MENU_CONTEXT_INLINE,
   );
   
@@ -180,6 +186,28 @@ function project_browser_admin() {
       set here."),
     '#required' => TRUE,
   );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Admin Settings Form
+ */
+function project_browser_filters_admin($form, &$form_state, $type) {
+  if ($categories = project_browser_get_categories($type)) {
+    $form['categories'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Categories'),
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+    );
+    $form['categories']['project_browser_condensed_categories_' . $type] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Displayed Categories'),
+      '#options' => $categories,
+      '#default_value' => variable_get('project_browser_condensed_categories_' . $type, array()),
+    );
+  }
 
   return system_settings_form($form);
 }
@@ -318,12 +346,12 @@ function project_browser_preprocess_project_browser_list(&$variables) {
       break;
   }
   
-  $main_content['project_browser_filters_block'] = array(
+  $main_content['project_browser_main_block'] = array(
     '#theme' => 'project_browser_block',
     'title' => $title, 
     'content' => $content,
     '#contextual_links' => array(
-      'project_browser' => array('admin/modules/project_browser', array()),
+      'project_browser' => array('admin/config/project_browser/main-settings', array()),
     ),
   );
   $variables['main_content'] = render($main_content);
@@ -337,7 +365,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
     'title' => t('Filters'), 
     'content' => drupal_render(drupal_get_form('project_browser_filters_form', $variables['type'])),
     '#contextual_links' => array(
-      'project_browser' => array('admin/modules/project_browser', array()),
+      'project_browser_filters' => array('admin/modules/project_browser/filters', array($variables['type'])),
     ),
   );
   $variables['filters'] = render($filters);
@@ -347,9 +375,6 @@ function project_browser_preprocess_project_browser_list(&$variables) {
     '#theme' => 'project_browser_block',
     'title' => t('Install queue'), 
     'content' => project_browser_get_install_list(),
-    '#contextual_links' => array(
-      'project_browser' => array('admin/modules/project_browser', array()),
-    ),
   );
   $variables['install_list'] = render($install_list);
 }
@@ -370,7 +395,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   $variables['author'] = t('Author: @author', array('@author' => $project['author']));
   $variables['description'] = _filter_htmlcorrector(filter_xss($project['description']));
   $variables['image'] = $project['image'];
-  $variables['last_updated'] = ($project['last updated']) ? t('Last Updated: @date', array('@date' => format_date($project['last updated'], 'medium'))) : '';
+  $variables['last_updated'] = ($project['last updated']) ? t('Last Updated: @date', array('@date' => format_date($project['last updated'], 'long'))) : '';
   
   $extras = array();
   

@@ -30,10 +30,6 @@ a.show-more {
   max-width: 200px;
 }
 
-.project-description {
-  margin: 5px;
-}
-
 #project-browser-main ul, #project-browser-main ol {
   list-style-position: inside;
 }

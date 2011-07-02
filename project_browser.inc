@@ -181,7 +181,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
   );
   
   // Add the categories filter if there are categories
-  if ($categories = project_browser_get_categories($type)) {
+  if ($categories = project_browser_get_categories($type, TRUE)) {
     $form['categories'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Categories'),
@@ -223,7 +223,7 @@ function project_browser_filters_form_submit($form, &$form_state) {
  * @return array
  *    Array containing all available categories or FALSE if no categories
  */
-function project_browser_get_categories($type) {
+function project_browser_get_categories($type, $condensed = FALSE) {
   $categories = array();
   
   $categories_raw = project_browser_fetch_categories($type);
@@ -242,6 +242,14 @@ function project_browser_get_categories($type) {
   
   if (is_array($categories) AND !empty($categories)) {
     ksort($categories);
+    
+    // Remove categories from the list if they are not on the condensed list
+    if ($condensed) {
+      $allowed = array_flip(variable_get('project_browser_condensed_categories_' . $type, 
+        array('administration', 'media', 'content', 'developer', 'user-management')));
+      $categories = array_intersect_key($categories, $allowed);
+    }
+    
     return $categories;
   }
   return FALSE;
