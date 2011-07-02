@@ -590,13 +590,11 @@ function project_browser_fetch_categories($type) {
  *   in 'url => name' format
  */
 function project_browser_get_servers() {
+  // FIXME - Change the link once drupal.org is ready
   $servers = array(
-    'http://www.drupal.org/xmlrpc.php' => 'Drupal.org',
+    'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/xmlrpc.php' => 'Drupal.org',
   );
-  
-  // REMOVEME once drupal.org has the functionality built in
-  $servers = array();
-  
+
   if ($servers_raw = variable_get('project_browser_servers', '')) {
     // Process the variable and add the servers to the list
     $custom_servers = _project_browser_string_to_array($servers_raw);

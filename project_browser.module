@@ -183,7 +183,7 @@ function project_browser_admin() {
     '#description' => t("Add new servers to use for the Project Browser, one per line, in 
       the 'url|Server Name' format. Drupal.org is added by default, and doesn't need to be 
       set here."),
-    '#required' => TRUE,
+    '#required' => FALSE,
   );
 
   return system_settings_form($form);
