@@ -15,7 +15,7 @@
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
  */
 
-require_once('project_browser.inc');
+// module_load_include('inc', 'project_browser', 'project_browser');
 
 /**
  * Display help and module information
