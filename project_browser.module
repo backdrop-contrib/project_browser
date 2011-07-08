@@ -15,6 +15,8 @@
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
  */
 
+module_load_include('inc', 'project_browser', 'project_browser');
+
 /**
  * Display help and module information
  */
@@ -217,8 +219,6 @@ function project_browser_filters_admin($form, &$form_state, $type) {
 function project_browser_forms() {
   $forms = array();
   
-  module_load_include('inc', 'project_browser', 'project_browser');
-  
   $projects = project_browser_get_listed_projects();
   foreach ($projects as $project) {
     $forms['project_browser_' . $project['name'] . '_install_form'] = array(
@@ -276,7 +276,6 @@ function project_browser_theme() {
  *     - current_task : the current task
  */
 function project_browser_preprocess_project_browser_install(&$variables) {
-  module_load_include('inc', 'project_browser', 'project_browser');
   // Add the themed list
   $variables['task_list'] = project_browser_installation_task_list($variables['current_task']);
 }
@@ -387,8 +386,6 @@ function project_browser_preprocess_project_browser_list(&$variables) {
  *     - project : associative array of project variables
  */
 function project_browser_preprocess_project_browser_project(&$variables) {
-  module_load_include('inc', 'project_browser', 'project_browser');
-  
   $project = $variables['project'];
   
   $variables['title'] = l(check_plain($project['title']), check_url($project['project url']));

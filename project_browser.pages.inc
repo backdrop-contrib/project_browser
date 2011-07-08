@@ -15,7 +15,6 @@
  *   Themed list of the projects
  */
 function project_browser_page($type) {
-  module_load_include('inc', 'project_browser', 'project_browser');
   drupal_add_css(drupal_get_path('module', 'project_browser') . '/project_browser.css', array('preprocess' => FALSE));
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/project_browser_more_link.js', 
    array('scope' => 'footer'));
