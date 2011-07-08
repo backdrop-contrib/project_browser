@@ -15,6 +15,7 @@
  *   Themed list of the projects
  */
 function project_browser_page($type) {
+  module_load_include('inc', 'project_browser', 'project_browser');
   drupal_add_css(drupal_get_path('module', 'project_browser') . '/project_browser.css', array('preprocess' => FALSE));
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/project_browser_more_link.js', 
    array('scope' => 'footer'));
@@ -35,6 +36,12 @@ function project_browser_page($type) {
   }
   if (isset($_SESSION['project_browser_text_filter_' . $type])) {
     $filters['text'] = $_SESSION['project_browser_text_filter_' . $type];
+  }
+  if (isset($_SESSION['project_browser_sort_method_filter_' . $type])) {
+    $filters['sort_method'] = $_SESSION['project_browser_sort_method_filter_' . $type];
+  }
+  if (isset($_SESSION['project_browser_sort_direction_filter_' . $type])) {
+    $filters['sort_direction'] = $_SESSION['project_browser_sort_direction_filter_' . $type];
   }
   $filters['requested'] = 12;
   $filters['page'] = isset($_GET['page']) ? $_GET['page'] : 0;

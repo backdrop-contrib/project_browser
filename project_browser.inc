@@ -205,6 +205,32 @@ function project_browser_filters_form($form, &$form_state, $type) {
     );
   }
   
+  $form['project_browser_sort_method_filter'] = array(
+    '#type' => 'select',
+    '#title' => t('Sort by'),
+    '#options' => array(
+      'score' => t('Relevancy'),
+      'title' => t('Title'),
+      'type' => t('Type'),
+      'name' => t('Author'),
+      'created' => t('Date'),
+      'latest_release' => t('Last release'),
+      'latest_activity' => t('Last build'),
+      'usage' => t('Most installed'),
+    ),
+    '#default_value' => isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'usage',
+  );
+  
+  $form['project_browser_sort_direction_filter'] = array(
+    '#type' => 'select',
+    '#title' => t('Sort direction'),
+    '#options' => array(
+      'asc' => t('Ascending'),
+      'desc' => t('Descending'),
+    ),
+    '#default_value' => isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc',
+  );
+  
   $form['project_type'] = array(
     '#type' => 'value',
     '#value' => $type,
@@ -233,6 +259,8 @@ function project_browser_filters_form_submit($form, &$form_state) {
   else {
     $_SESSION['project_browser_category_filter_' . $type] = array();
   }
+  $_SESSION['project_browser_sort_method_filter_' . $type] = $form_state['values']['project_browser_sort_method_filter'];
+  $_SESSION['project_browser_sort_direction_filter_' . $type] = $form_state['values']['project_browser_sort_direction_filter'];
   $_SESSION['project_browser_text_filter_' . $type] = $form_state['values']['search_text'];
 }
 
