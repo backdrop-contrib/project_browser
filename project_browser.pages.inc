@@ -19,6 +19,14 @@ function project_browser_page($type) {
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/project_browser_more_link.js', 
    array('scope' => 'footer'));
   
+  // Set any filters in the session that are needed
+  if (isset($_GET['sort_method'])) {
+    $_SESSION['project_browser_sort_method_filter_' . $type] = $_GET['sort_method'];
+  }
+  if (isset($_GET['sort_direction'])) {
+    $_SESSION['project_browser_sort_direction_filter_' . $type] = $_GET['sort_direction'];
+  }
+  
   // Build the filters
   $drupal_version = explode('.', DRUPAL_CORE_COMPATIBILITY);
   $filters = array(

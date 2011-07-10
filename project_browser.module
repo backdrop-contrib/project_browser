@@ -11,8 +11,18 @@
  * 
  * TODO - Add a filter to let users select which server to use, or all
  * TODO - Add a context to pages showing the filters currently used
- * TODO - Add a sorting mechanism filter
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
+ * TODO - Make the Sorting Widget better
+ * TODO - Combining the Install confirmation page and the Select Versions page into one page. Get rid of the Backup page for now.
+ * TODO - Changing the Select Releases widget to use jquery instead of AJAX.
+ * TODO - Refactoring so that each server has it's own 'results page', and a filter to let the user select which server to use. Use Secondary Tabs
+ * TODO - Implementing Caches for Client.
+ * TODO - Adding GET method for communicating with PBS.
+ * TODO - Fixing the categories so that multiple categories are supported by drupalorg_pbs
+ * TODO - Stop the site is offline message from showing on the enable page
+ * TODO - Remove Active Development status
+ * TODO - Move the server settings to a main configuration screen, instead of a context link
+ * TODO - Make the error reporting more robust
  */
 
 module_load_include('inc', 'project_browser', 'project_browser');

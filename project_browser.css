@@ -1,5 +1,21 @@
 /* $Id$ */
 
+ul.project-browser-sort-list li a {
+  color: #0074BD;
+}
+
+ul.project-browser-sort-list li.sort-active a {
+  color: #000;
+}
+
+ul.project-browser-sort-list li.sort-asc {
+  list-style-image: url('images/arrow-asc.png');
+}
+
+ul.project-browser-sort-list li.sort-desc {
+  list-style-image: url("images/arrow-desc.png");
+}
+
 a.show-more {
   float: right;
 }

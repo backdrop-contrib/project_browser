@@ -205,30 +205,14 @@ function project_browser_filters_form($form, &$form_state, $type) {
     );
   }
   
-  $form['project_browser_sort_method_filter'] = array(
-    '#type' => 'select',
-    '#title' => t('Sort by'),
-    '#options' => array(
-      'score' => t('Relevancy'),
-      'title' => t('Title'),
-      'type' => t('Type'),
-      'name' => t('Author'),
-      'created' => t('Date'),
-      'latest_release' => t('Last release'),
-      'latest_activity' => t('Last build'),
-      'usage' => t('Most installed'),
-    ),
-    '#default_value' => isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'usage',
-  );
+  $sort_options = project_browser_get_sort_options();
+  $current_sort_method = isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'score';
+  $current_sort_direction = isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc';;
   
-  $form['project_browser_sort_direction_filter'] = array(
-    '#type' => 'select',
-    '#title' => t('Sort direction'),
-    '#options' => array(
-      'asc' => t('Ascending'),
-      'desc' => t('Descending'),
-    ),
-    '#default_value' => isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc',
+  $form['sort-widget'] = array(
+    '#type' => 'item',
+    '#title' => t('Sort by'),
+    '#markup' => project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction),
   );
   
   $form['project_type'] = array(
@@ -244,6 +228,79 @@ function project_browser_filters_form($form, &$form_state, $type) {
   return $form;
 }
 
+/**
+ * Return a themed sort widget for the filters
+ */
+function project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction) {
+  $sort_list = array();
+  $current_path = drupal_get_path_alias($_GET['q']);
+  
+  foreach ($sort_options as $sort_option) {
+    $classes = array();
+    $query = array(
+      'sort_method' => $sort_option['method'],
+      'sort_direction' => $sort_option['default_sort'],
+    );
+    
+    // If the sort option is currently active, handle it differently
+    if ($current_sort_method == $sort_option['method']) {
+      $classes[] = 'sort-active';
+      $classes[] = 'sort-' . $current_sort_direction;
+      
+      // Set the direction of the sort link to the opposite of what it currently is
+      if ($current_sort_direction == $query['sort_direction']) {
+        if ($query['sort_direction'] == 'desc') {
+          $query['sort_direction'] = 'asc';
+        }
+        else {
+          $query['sort_direction'] = 'desc';
+        }
+      }
+    }
+    else {
+      $classes[] = 'sort-inactive';
+    }
+    
+    $sort_list[] = array(
+      'data' => l($sort_option['name'], $current_path, array('query' => $query, 'class' => array())),
+      'class' => $classes,
+    );
+  }
+
+  return theme('item_list', array(
+      'items' => $sort_list, 
+      'type' => 'ul',
+      'attributes' => array('class' => array('project-browser-sort-list'))));
+}
+
+
+/**
+ * Returns a list of sort options
+ * 
+ * @param $full
+ *   Set this to TRUE if you want to get all of the supported sort methods
+ */
+function project_browser_get_sort_options($full = FALSE) {
+  $sort_options = array(
+    'name' => array('method' => 'name', 'name' => t('Author'), 'default_sort' => 'asc'),
+    'title' => array('method' => 'title', 'name' => t('Title'), 'default_sort' => 'asc'),
+    'latest_release' => array('method' => 'latest_release', 'name' => t('Latest release'), 'default_sort' => 'desc'),
+    'usage' => array('method' => 'usage', 'name' => t('Most installed'), 'default_sort' => 'desc'),
+  );
+  
+  if ($full) {
+    $sort_options['score'] = array('method' => 'score', 'name' => t('Relevancy'), 'default_sort' => 'desc');
+    $sort_options['type'] = array('method' => 'type', 'name' => t('Type'), 'default_sort' => 'asc');
+    $sort_options['created'] = array('method' => 'created', 'name' => t('Date created'), 'default_sort' => 'asc');
+    $sort_options['latest_activity'] = array('method' => 'latest_activity', 'name' => t('Latest build'), 'default_sort' => 'desc');
+  }
+  
+  return $sort_options;
+}
+
+/**
+ * Helper function to expand the categories. REMOVEME once the categories are handled differently
+ */
 function project_browser_more_categories_ajax_callback($form, &$form_state) {
   return $form['categories'];
 }
@@ -259,8 +316,6 @@ function project_browser_filters_form_submit($form, &$form_state) {
   else {
     $_SESSION['project_browser_category_filter_' . $type] = array();
   }
-  $_SESSION['project_browser_sort_method_filter_' . $type] = $form_state['values']['project_browser_sort_method_filter'];
-  $_SESSION['project_browser_sort_direction_filter_' . $type] = $form_state['values']['project_browser_sort_direction_filter'];
   $_SESSION['project_browser_text_filter_' . $type] = $form_state['values']['search_text'];
 }
 
