@@ -587,16 +587,36 @@ function project_browser_fetch_results($filters) {
       }
       $local_filters['categories'] = $filters['categories'][$url];
     }
-
-    $results_raw = xmlrpc($url, array(
-      'project_browser_server.fetch_results' => array($local_filters),
-    ));
     
-    // Check for errors
-    if ($error = xmlrpc_error() AND $error->is_error) {
-      drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
-        array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
-      continue;
+    // Use XMLRPC if it is set
+    if (variable_get('project_browser_server_method', 'json') == 'xmlrpc') {
+      $results_raw = xmlrpc($url, array(
+        'project_browser_server.fetch_results' => array($local_filters),
+      ));
+      
+      // Check for errors
+      if ($error = xmlrpc_error() AND $error->is_error) {
+        drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
+          array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
+        continue;
+      }
+    }
+    
+    // Use json if it is set
+    if (variable_get('project_browser_server_method', 'json') == 'json') {
+      $local_filters['method'] = 'query';
+      if (isset($local_filters['categories'])) {
+        $local_filters['categories'] = serialize($local_filters['categories']);
+      }
+      $response = drupal_http_request($url . '?' . http_build_query($local_filters, FALSE, '&'));
+      if ($response->code == '200') {
+        $results_raw = drupal_json_decode($response->data);
+      }
+      else {
+        drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
+          array('@name' => $name, '@code' => $response->code, '@message' => $response->error)));
+        continue;
+      }
     }
     
     if (isset($results_raw['total'])) {
@@ -632,15 +652,35 @@ function project_browser_fetch_categories($type) {
     $categories = array();
     
     foreach ($servers as $url => $name) {
-      $categories_raw = xmlrpc($url, array(
-        'project_browser_server.fetch_categories' => array($type),
-      ));
+      // Use xmlrpc if it is set
+      if (variable_get('project_browser_server_method', 'json') == 'xmlrpc') {
+        $categories_raw = xmlrpc($url, array(
+          'project_browser_server.fetch_categories' => array($type),
+        ));
+        
+        // Check for errors
+        if ($error = xmlrpc_error() AND $error->is_error) {
+          drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
+            array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
+          continue;
+        }
+      }
       
-      // Check for errors
-      if ($error = xmlrpc_error() AND $error->is_error) {
-        drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
-          array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
-        continue;
+      // Use json if it is set
+      if (variable_get('project_browser_server_method', 'json') == 'json') {
+        $params = array(
+          'method' => 'categories',
+          'type' => $type,
+        );
+        $response = drupal_http_request($url . '?' . http_build_query($params, FALSE, '&'));
+        if ($response->code == '200') {
+          $categories_raw = drupal_json_decode($response->data);
+        }
+        else {
+          drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
+            array('@name' => $name, '@code' => $response->code, '@message' => $response->error)));
+          continue;
+        }
       }
       
       if (is_array($categories_raw) AND !empty($categories_raw)) {
@@ -666,7 +706,7 @@ function project_browser_fetch_categories($type) {
 function project_browser_get_servers() {
   // FIXME - Change the link once drupal.org is ready
   $servers = array(
-    'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/xmlrpc.php' => 'Drupal.org',
+    'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/project_browser/server' => 'Drupal.org',
   );
 
   if ($servers_raw = variable_get('project_browser_servers', '')) {
