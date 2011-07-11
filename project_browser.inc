@@ -41,7 +41,7 @@ function project_browser_install_form($form, &$form_state, $project) {
   $queued_projects = project_browser_get_queued_projects();
   $form['install'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Install'),
+    '#title' => t('Add to Install queue'),
     '#default_value' => isset($queued_projects[$project['name']]) ? 1 : 0,
     '#attributes' => array('class' => array('install-checkbox-' . $project['name'])),
     '#ajax' => array(
@@ -205,16 +205,6 @@ function project_browser_filters_form($form, &$form_state, $type) {
     );
   }
   
-  $sort_options = project_browser_get_sort_options();
-  $current_sort_method = isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'score';
-  $current_sort_direction = isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc';;
-  
-  $form['sort-widget'] = array(
-    '#type' => 'item',
-    '#title' => t('Sort by'),
-    '#markup' => project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction),
-  );
-  
   $form['project_type'] = array(
     '#type' => 'value',
     '#value' => $type,
@@ -233,6 +223,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
  */
 function project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction) {
   $sort_list = array();
+  $sort_list[] = array('data' => t('Sort by:'), 'class' => array('sort-header'));
   $current_path = drupal_get_path_alias($_GET['q']);
   
   foreach ($sort_options as $sort_option) {
@@ -282,10 +273,10 @@ function project_browser_get_sort_widget($sort_options, $current_sort_method, $c
  */
 function project_browser_get_sort_options($full = FALSE) {
   $sort_options = array(
-    'name' => array('method' => 'name', 'name' => t('Author'), 'default_sort' => 'asc'),
-    'title' => array('method' => 'title', 'name' => t('Title'), 'default_sort' => 'asc'),
-    'latest_release' => array('method' => 'latest_release', 'name' => t('Latest release'), 'default_sort' => 'desc'),
     'usage' => array('method' => 'usage', 'name' => t('Most installed'), 'default_sort' => 'desc'),
+    'title' => array('method' => 'title', 'name' => t('Title'), 'default_sort' => 'asc'),
+    'name' => array('method' => 'name', 'name' => t('Author'), 'default_sort' => 'asc'),
+    'latest_release' => array('method' => 'latest_release', 'name' => t('Latest release'), 'default_sort' => 'desc'),
   );
   
   if ($full) {

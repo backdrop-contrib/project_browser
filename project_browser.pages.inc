@@ -75,13 +75,24 @@ function project_browser_page($type) {
     $finish = $total;
   }
   
+  $sort_options = project_browser_get_sort_options();
+  $current_sort_method = isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'score';
+  $current_sort_direction = isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc';;
+  
+  $sort_widget = array(
+    '#type' => 'item',
+    '#weight' => 1,
+    '#markup' => project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction),
+  );
+  
   $build = array();
   $build['content'] = array(
     'project_browser_header' => array(
       '#markup' => t('Showing @start to @finish of @total.', array(
         '@start' => $start, '@finish' => $finish, '@total' => $total)),
-      '#weight' => 1,
+      '#weight' => 0,
     ),
+    'project_browser_sort_header' => $sort_widget,
     'project_browser_list' => array(
       '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
       '#weight' => 2,

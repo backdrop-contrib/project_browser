@@ -1,19 +1,35 @@
 /* $Id$ */
 
-ul.project-browser-sort-list li a {
+div.item-list ul.project-browser-sort-list {
+  margin: 0;
+}
+
+div.item-list ul.project-browser-sort-list li {
+  display: inline;
+  list-style-image: none;
+  margin-right: 10px;
+}
+
+div.item-list ul.project-browser-sort-list li a {
   color: #0074BD;
 }
 
-ul.project-browser-sort-list li.sort-active a {
+div.item-list ul.project-browser-sort-list li.sort-active a {
   color: #000;
 }
 
-ul.project-browser-sort-list li.sort-asc {
-  list-style-image: url('images/arrow-asc.png');
+div.item-list ul.project-browser-sort-list li.sort-header {
+  font-weight: bold;
 }
 
-ul.project-browser-sort-list li.sort-desc {
-  list-style-image: url("images/arrow-desc.png");
+div.item-list ul.project-browser-sort-list li.sort-asc {
+  background: url("images/arrow-asc.png") no-repeat scroll right 2px transparent;
+  padding-right: 15px;
+}
+
+div.item-list ul.project-browser-sort-list li.sort-desc {
+  background: url("images/arrow-desc.png") no-repeat scroll right 2px transparent;
+  padding-right: 15px;
 }
 
 a.show-more {

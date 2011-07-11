@@ -9,10 +9,8 @@
  * This module provides a new UI for admins to easily browse modules and themes from their
  * admin pages, and install them.
  * 
- * TODO - Add a filter to let users select which server to use, or all
  * TODO - Add a context to pages showing the filters currently used
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
- * TODO - Make the Sorting Widget better
  * TODO - Combining the Install confirmation page and the Select Versions page into one page. Get rid of the Backup page for now.
  * TODO - Changing the Select Releases widget to use jquery instead of AJAX.
  * TODO - Refactoring so that each server has it's own 'results page', and a filter to let the user select which server to use. Use Secondary Tabs
