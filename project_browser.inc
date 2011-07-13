@@ -567,6 +567,13 @@ function project_browser_get_queued_releases() {
 function project_browser_fetch_results($filters) {
   $servers = project_browser_get_servers();
   
+  // Attempt to retrieve the cached version of this page
+  $cid = md5(serialize(array_merge($filters, $servers)));
+  
+  if ($cache = cache_get($cid)) {
+    return $cache->data;
+  }
+  
   $results = array(
     'projects' => array(),
     'total' => 0,
@@ -628,6 +635,9 @@ function project_browser_fetch_results($filters) {
       $results['projects'] = array_merge($results['projects'], $results_raw['projects']);
     }
   }
+
+  // Set the cached version of the results
+  cache_set($cid, $results, 'cache', strtotime("+24 hours"));
   
   return $results;
 }
