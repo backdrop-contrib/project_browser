@@ -88,7 +88,7 @@ function project_browser_install_form_submit($form, &$form_state) {
 /**
  * AJAX callback for the install form
  */
-function project_browser_install_form_ajax($form, &$form_state) {
+function project_browser_install_form_ajax($form, $form_state) {
   project_browser_install_form_submit($form, &$form_state);
   return project_browser_get_install_list();
 }
@@ -96,7 +96,7 @@ function project_browser_install_form_ajax($form, &$form_state) {
 /**
  * AJAX callback for the install queue form checkboxes
  */
-function project_browser_install_queue_ajax($form, &$form_state) {
+function project_browser_install_queue_ajax($form, $form_state) {
   $commands = array();
   
   foreach ($form_state['values']['projects'] as $item) {
@@ -292,7 +292,7 @@ function project_browser_get_sort_options($full = FALSE) {
 /**
  * Helper function to expand the categories. REMOVEME once the categories are handled differently
  */
-function project_browser_more_categories_ajax_callback($form, &$form_state) {
+function project_browser_more_categories_ajax_callback($form, $form_state) {
   return $form['categories'];
 }
 
