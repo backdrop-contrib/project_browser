@@ -388,30 +388,6 @@ function project_browser_prepare_categories($raw_cats, $type) {
 }
 
 /**
- * Helper function to parse the servers string into an array
- */
-function _project_browser_string_to_array($string) {
-  $values = array();
-
-  $list = explode("\n", $string);
-  $list = array_map('trim', $list);
-  $list = array_filter($list, 'strlen');
-  
-  foreach ($list as $position => $text) {
-    $value = $key = FALSE;
-    
-    $matches = array();
-    if (preg_match('/(.*)\|(.*)/', $text, $matches)) {
-      $key = $matches[1];
-      $value = $matches[2];
-      $values[$key] = $value;
-    }
-  }
-  
-  return $values;
-}
-
-/**
  * Helper function to check if a project is enabled
  * 
  * @param $type
@@ -579,7 +555,7 @@ function project_browser_fetch_results($filters) {
     'total' => 0,
   );
   
-  foreach ($servers as $url => $name) {
+  foreach ($servers as $url => $server) {
     $local_filters = $filters;
     
     // FIXME - Handle when one server runs out of results before another...
@@ -596,7 +572,7 @@ function project_browser_fetch_results($filters) {
     }
     
     // Use XMLRPC if it is set
-    if (variable_get('project_browser_server_method', 'json') == 'xmlrpc') {
+    if ($server['method'] == 'xmlrpc') {
       $results_raw = xmlrpc($url, array(
         'project_browser_server.fetch_results' => array($local_filters),
       ));
@@ -604,13 +580,13 @@ function project_browser_fetch_results($filters) {
       // Check for errors
       if ($error = xmlrpc_error() AND $error->is_error) {
         drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
-          array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
+          array('@name' => $server['name'], '@code' => $error->code, '@message' => $error->message)));
         continue;
       }
     }
     
     // Use json if it is set
-    if (variable_get('project_browser_server_method', 'json') == 'json') {
+    if ($server['method'] == 'json') {
       $local_filters['method'] = 'query';
       if (isset($local_filters['categories'])) {
         $local_filters['categories'] = serialize($local_filters['categories']);
@@ -621,7 +597,7 @@ function project_browser_fetch_results($filters) {
       }
       else {
         drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
-          array('@name' => $name, '@code' => $response->code, '@message' => $response->error)));
+          array('@name' => $server['name'], '@code' => $response->code, '@message' => $response->error)));
         continue;
       }
     }
@@ -651,19 +627,20 @@ function project_browser_fetch_results($filters) {
  *   Returns an array of the categories
  */
 function project_browser_fetch_categories($type) {
-  // Attempt to retrieve the categories from the cache
-  if ($cache = cache_get('project_browser_categories_'. $type, 'cache')) {
-    $categories = $cache->data;
+  $servers = project_browser_get_servers();
+  
+  // Attempt to retrieve the cached version of this page
+  $cid = md5('categories_'. $type . serialize($servers));
+  
+  if ($cache = cache_get($cid)) {
+    return $cache->data;
   }
   else {
-    // Fetch the categories from the servers
-    $servers = project_browser_get_servers();
-    
     $categories = array();
     
-    foreach ($servers as $url => $name) {
+    foreach ($servers as $url => $server) {
       // Use xmlrpc if it is set
-      if (variable_get('project_browser_server_method', 'json') == 'xmlrpc') {
+      if ($server['method'] == 'xmlrpc') {
         $categories_raw = xmlrpc($url, array(
           'project_browser_server.fetch_categories' => array($type),
         ));
@@ -671,13 +648,13 @@ function project_browser_fetch_categories($type) {
         // Check for errors
         if ($error = xmlrpc_error() AND $error->is_error) {
           drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
-            array('@name' => $name, '@code' => $error->code, '@message' => $error->message)));
+            array('@name' => $server['name'], '@code' => $error->code, '@message' => $error->message)));
           continue;
         }
       }
       
       // Use json if it is set
-      if (variable_get('project_browser_server_method', 'json') == 'json') {
+      if ($server['method'] == 'json') {
         $params = array(
           'method' => 'categories',
           'type' => $type,
@@ -688,7 +665,7 @@ function project_browser_fetch_categories($type) {
         }
         else {
           drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
-            array('@name' => $name, '@code' => $response->code, '@message' => $response->error)));
+            array('@name' => $server['name'], '@code' => $response->code, '@message' => $response->error)));
           continue;
         }
       }
@@ -699,8 +676,7 @@ function project_browser_fetch_categories($type) {
     }
     
     // Cache this for 24 hours
-    // FIXME - Uncomment this when we get to production
-    // cache_set('project_browser_categories_'. $type, $categories, 'cache', strtotime("+24 hours"));
+    cache_set($cid, $categories, 'cache', strtotime("+24 hours"));
   }
   
   return $categories;
@@ -716,12 +692,32 @@ function project_browser_fetch_categories($type) {
 function project_browser_get_servers() {
   // FIXME - Change the link once drupal.org is ready
   $servers = array(
-    'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/project_browser/server' => 'Drupal.org',
+    'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/project_browser/server' => array(
+      'name' => 'Drupal.org',
+      'method' => 'json',
+    ),
   );
 
   if ($servers_raw = variable_get('project_browser_servers', '')) {
     // Process the variable and add the servers to the list
-    $custom_servers = _project_browser_string_to_array($servers_raw);
+    $custom_servers = array();
+
+    $list = explode("\n", $string);
+    $list = array_map('trim', $list);
+    $list = array_filter($list, 'strlen');
+    
+    foreach ($list as $position => $text) {
+      $method = $name = $key = FALSE;
+      
+      $matches = array();
+      if (preg_match('/(.*)\|(.*)|(.*)/', $text, $matches)) {
+        $key = $matches[1];
+        $method = $matches[2];
+        $name = $matches[3];
+        $custom_servers[$key] = array('name' => $name, 'method' => $method);
+      }
+    }
+    
     $servers = array_merge($servers, $custom_servers);
   }
   
