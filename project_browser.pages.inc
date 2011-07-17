@@ -15,9 +15,29 @@
  *   Themed list of the projects
  */
 function project_browser_page($type) {
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/project_browser.css', array('preprocess' => FALSE));
-  drupal_add_js(drupal_get_path('module', 'project_browser') . '/project_browser_more_link.js', 
-   array('scope' => 'footer'));
+  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
+  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js', 
+    array('scope' => 'footer'));
+  drupal_add_library('system', 'ui.widget');
+  drupal_add_library('system', 'ui.dialog');
+  drupal_add_library('system', 'ui.position');
+  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js');
+  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/jquery.multiselect.css', array('preprocess' => FALSE));
+  
+  $js = "
+(function ($) {
+  $('#edit-categories').multiselect({
+    noneSelectedText: '" . t('Choose') . "...',
+    selectedList: 99,
+    minWidth: 500,
+    position: {
+      my: 'right top',
+      at: 'right bottom'
+    }
+  });
+})(jQuery);
+";
+  drupal_add_js($js, array('type' => 'inline', 'scope' => 'footer'));
   
   // Set any filters in the session that are needed
   if (isset($_GET['sort_method'])) {
@@ -118,7 +138,7 @@ function project_browser_page($type) {
  *    Operation to preform.
  */
 function project_browser_installation_page($op) {
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/project_browser.css', array('preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
   
   switch ($op) {
     case 'select_versions':
