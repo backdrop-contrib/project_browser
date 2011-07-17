@@ -14,7 +14,6 @@
  * TODO - Combining the Install confirmation page and the Select Versions page into one page. Get rid of the Backup page for now.
  * TODO - Changing the Select Releases widget to use jquery instead of AJAX.
  * TODO - Refactoring so that each server has it's own 'results page', and a filter to let the user select which server to use. Use Secondary Tabs
- * TODO - Fixing the categories so that multiple categories are supported by drupalorg_pbs
  * TODO - Stop the site is offline message from showing on the enable page
  * TODO - Move the server settings to a main configuration screen, instead of a context link
  * TODO - Make the error reporting more robust
@@ -243,31 +242,36 @@ function project_browser_forms() {
 /**
  * Implements hook_theme() 
  */
-function project_browser_theme() {
+function project_browser_theme($existing, $type, $theme, $path) {
   return array(
     // Template for installation page
     'project_browser_install' => array(
       'variables' => array('current_task' => NULL, 'main_content' => NULL),
+      'path' => $path . '/theme',
       'template' => 'project_browser_install',
     ),
     // Template for list of projects
     'project_browser_list' => array(
       'variables' => array('projects_list' => NULL, 'type' => NULL),
+      'path' => $path . '/theme',
       'template' => 'project_browser_list',
     ),
     // Template for list of projects
     'project_browser_block' => array(
       'render element' => 'element',
+      'path' => $path . '/theme',
       'template' => 'project_browser_block',
     ),
     // Template for single project
     'project_browser_project' => array(
       'variables' => array('project' => NULL, 'first' => NULL),
+      'path' => $path . '/theme',
       'template' => 'project_browser_project',
     ),
     // Template for install queue item
     'project_browser_install_queue' => array(
       'variables' => array('projects' => NULL),
+      'path' => $path . '/theme',
       'template' => 'project_browser_install_queue',
     ),
   );

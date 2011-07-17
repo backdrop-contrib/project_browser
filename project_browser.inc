@@ -715,8 +715,8 @@ function project_browser_get_servers() {
  */
 function project_browser_get_project_release_data($project) {
   $releases = array();
-  // FIXME - Change the 'type' key to 'project_type'
   $project['project_type'] = $project['type'];
+  
   // Build the releases cache for this project
   module_load_include('inc', 'update', 'update.fetch');
   if (_update_process_fetch_task($project)) {
