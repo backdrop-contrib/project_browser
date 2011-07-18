@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Default theme implementation to display a block on the projects browser page
@@ -8,6 +7,8 @@
  * - $title: The title of the block
  * - $content: The content of the block
  * These are defined in project_browser_preprocess_project_browser_block()
+ * 
+ * @see project_browser_preprocess_project_browser_block()
  */
 ?>
 <div class="<?php print $classes; ?>">
