@@ -62,7 +62,7 @@ function project_browser_menu() {
     'type' => MENU_LOCAL_ACTION,
     'context' => MENU_CONTEXT_INLINE,
   );
-  $items['admin/modules/project_browser/filters/%'] = array(
+  $items['admin/modules/project-browser/filters/%'] = array(
     'title' => 'Filters Settings',
     'description' => 'Set up the Filters Here',
     'page callback' => 'drupal_get_form',
@@ -72,7 +72,7 @@ function project_browser_menu() {
     'context' => MENU_CONTEXT_INLINE,
   );
   
-  $items['admin/modules/project_browser'] = array(
+  $items['admin/modules/project-browser'] = array(
     'title' => 'Project Browser',
     'description' => 'Browse and search for new modules',
     'page callback' => 'project_browser_page',
@@ -81,7 +81,7 @@ function project_browser_menu() {
     'file' => 'project_browser.pages.inc',
   );
   
-  $items['admin/modules/project_browser/modules'] = array(
+  $items['admin/modules/project-browser/modules'] = array(
     'title' => 'Modules',
     'description' => 'Browse and search for new modules',
     'page callback' => 'project_browser_page',
@@ -91,7 +91,7 @@ function project_browser_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   
-  $items['admin/modules/project_browser/themes'] = array(
+  $items['admin/modules/project-browser/themes'] = array(
     'title' => 'Themes',
     'description' => 'Browse and search for new themes',
     'page callback' => 'project_browser_page',
@@ -101,7 +101,7 @@ function project_browser_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   
-  $items['admin/modules/project_browser/install/%'] = array(
+  $items['admin/modules/project-browser/install/%'] = array(
     'title' => 'Install',
     'page callback' => 'project_browser_installation_page',
     'page arguments' => array(4),
@@ -126,7 +126,7 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
           unset($data['actions']['output'][$num]);
         }
       }
-      $item = menu_get_item('admin/modules/project_browser/modules');
+      $item = menu_get_item('admin/modules/project-browser/modules');
       if ($item['access']) {
         $item['title'] = t('Install new modules');
         $data['actions']['output'][] = array(
@@ -135,9 +135,9 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
         );
       }
       break;
-    case 'admin/modules/project_browser':
-    case 'admin/modules/project_browser/modules':
-    case 'admin/modules/project_browser/themes':
+    case 'admin/modules/project-browser':
+    case 'admin/modules/project-browser/modules':
+    case 'admin/modules/project-browser/themes':
       $item = menu_get_item('admin/modules/install');
       if ($item['access']) {
         $item['title'] = t('Install manually');
@@ -154,7 +154,7 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
           unset($data['actions']['output'][$num]);
         }
       }
-      $item = menu_get_item('admin/modules/project_browser/themes');
+      $item = menu_get_item('admin/modules/project-browser/themes');
       if ($item['access']) {
         $item['title'] = t('Install new themes');
         $data['actions']['output'][] = array(
@@ -248,31 +248,31 @@ function project_browser_theme($existing, $type, $theme, $path) {
     'project_browser_install' => array(
       'variables' => array('current_task' => NULL, 'main_content' => NULL),
       'path' => $path . '/theme',
-      'template' => 'project_browser_install',
+      'template' => 'project-browser-install',
     ),
     // Template for list of projects
     'project_browser_list' => array(
       'variables' => array('projects_list' => NULL, 'type' => NULL),
       'path' => $path . '/theme',
-      'template' => 'project_browser_list',
+      'template' => 'project-browser-list',
     ),
     // Template for list of projects
     'project_browser_block' => array(
       'render element' => 'element',
       'path' => $path . '/theme',
-      'template' => 'project_browser_block',
+      'template' => 'project-browser-block',
     ),
     // Template for single project
     'project_browser_project' => array(
       'variables' => array('project' => NULL, 'first' => NULL),
       'path' => $path . '/theme',
-      'template' => 'project_browser_project',
+      'template' => 'project-browser-project',
     ),
     // Template for install queue item
     'project_browser_install_queue' => array(
       'variables' => array('projects' => NULL),
       'path' => $path . '/theme',
-      'template' => 'project_browser_install_queue',
+      'template' => 'project-browser-install-queue',
     ),
   );
 }
@@ -373,7 +373,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
     'title' => t('Filters'), 
     'content' => drupal_render(drupal_get_form('project_browser_filters_form', $variables['type'])),
     '#contextual_links' => array(
-      'project_browser_filters' => array('admin/modules/project_browser/filters', array($variables['type'])),
+      'project_browser_filters' => array('admin/modules/project-browser/filters', array($variables['type'])),
     ),
   );
   $variables['filters'] = render($filters);

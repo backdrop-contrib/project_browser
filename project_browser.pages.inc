@@ -307,7 +307,7 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
     }
   }
   
-  drupal_goto('admin/modules/project_browser/install/install');
+  drupal_goto('admin/modules/project-browser/install/install');
 }
 
 /**
@@ -537,7 +537,7 @@ function project_browser_installation_enable_form_submit($form, &$form_state) {
 function project_browser_installation_task_list($active = NULL) {
   // Default list of tasks.
   $tasks = array(
-    'select_versions' => l(t('Select versions'), 'admin/modules/project_browser/install/select_versions'),
+    'select_versions' => l(t('Select versions'), 'admin/modules/project-browser/install/select_versions'),
     'backup' => t('Backup site'),
     'install' => t('Install projects'),
     'enable' => t('Enable projects'),

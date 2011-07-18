@@ -24,7 +24,7 @@ function project_browser_install_button_form($form, &$form_state) {
     '#type' => 'submit',
     '#value' => 'Install',
   );
-  $form['#action'] = url('admin/modules/project_browser/install/select_versions');
+  $form['#action'] = url('admin/modules/project-browser/install/select_versions');
   
   return $form;
 }
@@ -903,8 +903,8 @@ function _project_browser_batch_install_releases_finished($success, $results, $o
   }
   else {
     drupal_set_message(t('Error installing projects.'), 'error');
-    drupal_goto('admin/modules/project_browser/install/select_versions');
+    drupal_goto('admin/modules/project-browser/install/select_versions');
   }
 
-  drupal_goto('admin/modules/project_browser/install/enable');
+  drupal_goto('admin/modules/project-browser/install/enable');
 }
