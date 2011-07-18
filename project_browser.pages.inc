@@ -1,8 +1,8 @@
 <?php 
-// $Id$
-
 /**
  * @file
+ * 
+ * This include contains most of the page callbacks for the project browser
  * 
  */
 
@@ -15,14 +15,15 @@
  *   Themed list of the projects
  */
 function project_browser_page($type) {
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
-  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js', 
-    array('scope' => 'footer'));
   drupal_add_library('system', 'ui.widget');
   drupal_add_library('system', 'ui.dialog');
   drupal_add_library('system', 'ui.position');
-  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js');
+  
   drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/jquery.multiselect.css', array('preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
+  
+  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js', array('scope' => 'footer'));
+  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js');
   
   $js = "
 (function ($) {

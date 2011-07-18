@@ -1,6 +1,4 @@
 <?php 
-// $Id$
-
 /**
  * @file
  * Various functions that are required by project_browser

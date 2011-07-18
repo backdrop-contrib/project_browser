@@ -1,4 +1,3 @@
-; $Id: $
 name = Project Browser
 description = A Project Browser that allows users to browse for and install modules and themes from their Drupal site
 package = Core
