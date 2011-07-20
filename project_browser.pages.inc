@@ -126,7 +126,6 @@ function project_browser_page($type) {
   
   return $build;
 }
-  
 
 // ======================================
 // Installation Page:
@@ -145,14 +144,6 @@ function project_browser_installation_page($op) {
     case 'select_versions':
       drupal_set_title(t("Select versions"));
       $content = project_browser_installation_select_versions_page();
-      break;
-    case 'backup':
-      drupal_set_title(t("Backup"));
-      $content = project_browser_installation_backup_page();
-      break;
-    case 'install':
-      drupal_set_title(t("Install"));
-      $content = project_browser_installation_install_page();
       break;
     case 'enable':
       drupal_set_title(t("Enable modules"));
@@ -276,7 +267,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Next'),
+    '#value' => t('Install'),
   );
   
   return $form;
@@ -308,77 +299,7 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
     }
   }
   
-  drupal_goto('admin/modules/project-browser/install/install');
-}
-
-/**
- * Get a release from a project and a release_name
- */
-function project_browser_get_release($release_name, $project) {
-  $release_data = project_browser_get_project_release_data($project);
-  
-  return isset($release_data['releases'][$release_name]) ? $release_data['releases'][$release_name] : FALSE;
-}
-
-/**
- * Task page for the Backup site installation task
- * 
- * Creates a backup of the database and lets the user download the file
- */
-function project_browser_installation_backup_page() {
-  // TODO - Implement this
-}
-
-/**
- * Task page for the Install Projects installation task
- * 
- * Starts a batch install process of the projects
- */
-function project_browser_installation_install_page() {
-  // Show a Install button
-  $queued_releases = project_browser_get_queued_releases();
-  
-  return drupal_get_form('project_browser_installation_install_form', $queued_releases);
-}
-
-/**
- * Form builder for the select versions form
- * 
- * @param array $projects
- *   An array of projects to get the releases for
- */
-function project_browser_installation_install_form($form, &$form_state, $releases) {
-  $form = array();
-  
-  $form['releases'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Install'),
-    '#description' => t('You are about to install the following projects:'),
-    '#tree' => TRUE,
-    '#collapsible' => FALSE,
-  );
-
-  foreach ($releases as $release_name => $project) {
-    $items[] = $project['title'] . ' ' . $release_name;
-  }
-  
-  $form['releases']['items'] = array(
-    '#type' => 'item',
-    '#markup' => theme('item_list', array('items' => $items)),
-  );
-  
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Install'),
-  );
-  
-  return $form;
-}
-
-/**
- * Submit handler for the select versions form
- */
-function project_browser_installation_install_form_submit($form, &$form_state) {
+  // Install the projects with batch
   module_load_include('inc', 'update', 'update.manager');
   
   $queued_releases = project_browser_get_queued_releases();
@@ -400,6 +321,15 @@ function project_browser_installation_install_form_submit($form, &$form_state) {
 }
 
 /**
+ * Get a release from a project and a release_name
+ */
+function project_browser_get_release($release_name, $project) {
+  $release_data = project_browser_get_project_release_data($project);
+  
+  return isset($release_data['releases'][$release_name]) ? $release_data['releases'][$release_name] : FALSE;
+}
+
+/**
  * Task page for the Enable projects installation task
  * 
  * Show a form which lets the user enable the newly installed projects
@@ -417,9 +347,6 @@ function project_browser_installation_enable_page() {
  *   An array of projects to get the releases for
  */
 function project_browser_installation_enable_form($form, &$form_state, $projects) {
-  // Restore the maintenance mode to what it was at the end
-  variable_set('maintenance_mode', $_SESSION['maintenance_mode']);
-  
   $modules = system_rebuild_module_data();
   
   $form['instructions'] = array(
@@ -514,7 +441,7 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
  */
 function project_browser_installation_enable_form_submit($form, &$form_state) {
   $enable_queue = array_filter($form_state['values']['modules']);
-  // TODO - Enable these all at once?
+  // Enable these all at once?
   // module_enable($enable_queue);
   
   // Enable the modules one by one
@@ -538,9 +465,7 @@ function project_browser_installation_enable_form_submit($form, &$form_state) {
 function project_browser_installation_task_list($active = NULL) {
   // Default list of tasks.
   $tasks = array(
-    'select_versions' => l(t('Select versions'), 'admin/modules/project-browser/install/select_versions'),
-    'backup' => t('Backup site'),
-    'install' => t('Install projects'),
+    'select_versions' => t('Select versions'),
     'enable' => t('Enable projects'),
   );
   

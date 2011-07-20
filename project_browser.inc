@@ -888,6 +888,12 @@ function _project_browser_batch_install_release($release_name, $project, &$conte
  * Show a message and finish up the batch
  */
 function _project_browser_batch_install_releases_finished($success, $results, $operations) {
+  drupal_get_messages();
+  
+  // Restore the maintenance mode to what it was at the start
+  variable_set('maintenance_mode', $_SESSION['maintenance_mode']);
+  unset($_SESSION['maintenance_mode']);
+  
   unset($_SESSION['project_browser_install_releases_list']);
   if ($success) {
     if (!empty($results)) {
