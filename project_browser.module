@@ -10,8 +10,6 @@
  * TODO - Add a context to pages showing the filters currently used
  * FIXME - Figure out why some themes are showing as installed correctly but others are not
  * TODO - Changing the Select Releases widget to use jquery instead of AJAX.
- * TODO - Refactoring so that each server has it's own 'results page', and a filter to let the user select which server to use. Use Secondary Tabs
- * TODO - Move the server settings to a main configuration screen, instead of a context link
  * TODO - Make the error reporting more robust
  */
 
@@ -49,14 +47,12 @@ function project_browser_permission() {
  */
 function project_browser_menu() {
   $items = array();
-  $items['admin/config/project_browser/main-settings'] = array(
-    'title' => 'Server Settings',
-    'description' => 'Set the various Project Browser Settings here',
+  $items['admin/config/development/project_browser'] = array(
+    'title' => 'Project Browser settings',
+    'description' => 'Add new repositories and set other settings for Project Browser.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('project_browser_admin'),
     'access arguments' => array('access administration pages'),
-    'type' => MENU_LOCAL_ACTION,
-    'context' => MENU_CONTEXT_INLINE,
   );
   
   $items['admin/modules/project-browser'] = array(
@@ -163,16 +159,16 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
 function project_browser_admin() {
   $form['main'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Main Settings'),
+    '#title' => t('Main settings'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    );
+  );
   $form['main']['project_browser_servers'] = array(
     '#type' => 'textarea',
-    '#title' => t('Servers'),
+    '#title' => t('Repositories'),
     '#default_value' => variable_get('project_browser_servers', ''),
-    '#description' => t("Add new servers to use for the Project Browser, one per line, in 
-      the 'url|method|Server Name' format. Drupal.org is added by default, and doesn't need to be 
+    '#description' => t("Add new repositories to use for the Project Browser, one per line, in 
+      the 'url|method|Site Name' format. Drupal.org is added by default, and doesn't need to be 
       set here."),
     '#required' => FALSE,
   );
@@ -324,7 +320,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
     'title' => $title, 
     'content' => $content,
     '#contextual_links' => array(
-      'project_browser' => array('admin/config/project_browser/main-settings', array()),
+      'project_browser' => array('admin/config/development/project_browser', array()),
     ),
   );
   $variables['main_content'] = render($main_content);
