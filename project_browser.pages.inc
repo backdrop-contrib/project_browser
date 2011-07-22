@@ -41,6 +41,9 @@ function project_browser_page($type) {
   drupal_add_js($js, array('type' => 'inline', 'scope' => 'footer'));
   
   // Set any filters in the session that are needed
+  if (isset($_GET['repository'])) {
+    $_SESSION['project_browser_sever_filter'] = $_GET['repository'];
+  }
   if (isset($_GET['sort_method'])) {
     $_SESSION['project_browser_sort_method_filter_' . $type] = $_GET['sort_method'];
   }
@@ -71,6 +74,12 @@ function project_browser_page($type) {
   if (isset($_SESSION['project_browser_sort_direction_filter_' . $type])) {
     $filters['sort_direction'] = $_SESSION['project_browser_sort_direction_filter_' . $type];
   }
+  if (isset($_SESSION['project_browser_server_filter'])) {
+    $filters['server'] = $_SESSION['project_browser_server_filter'];
+  }
+  else {
+    $filters['server'] = 0;
+  }
   $filters['requested'] = 12;
   $filters['page'] = isset($_GET['page']) ? $_GET['page'] : 0;
   
@@ -100,12 +109,6 @@ function project_browser_page($type) {
   $current_sort_method = isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'score';
   $current_sort_direction = isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc';;
   
-  $sort_widget = array(
-    '#type' => 'item',
-    '#weight' => 1,
-    '#markup' => project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction),
-  );
-  
   $build = array();
   $build['content'] = array(
     'project_browser_header' => array(
@@ -113,16 +116,30 @@ function project_browser_page($type) {
         '@start' => $start, '@finish' => $finish, '@total' => $total)),
       '#weight' => 0,
     ),
-    'project_browser_sort_header' => $sort_widget,
+    'project_browser_sort_header' => array(
+      '#type' => 'item',
+      '#weight' => 2,
+      '#markup' => project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction),
+    ),
     'project_browser_list' => array(
       '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
-      '#weight' => 2,
+      '#weight' => 3,
     ),
     'pager' => array(
       '#theme' => 'pager',
-      '#weight' => 5,
+      '#weight' => 99,
     ),
   );
+  
+  $servers = project_browser_get_servers();
+  
+  if (count($servers) > 1) {
+    $build['content']['project_browser_server_header'] = array(
+      '#type' => 'item',
+      '#weight' => 1,
+      '#markup' => project_browser_get_server_widget($servers, $filters['server']),
+    );
+  }
   
   return $build;
 }

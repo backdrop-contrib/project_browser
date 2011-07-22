@@ -250,6 +250,44 @@ function project_browser_get_sort_widget($sort_options, $current_sort_method, $c
       'attributes' => array('class' => array('project-browser-sort-list'))));
 }
 
+/**
+ * Return a themed sort widget for the filters
+ */
+function project_browser_get_server_widget($servers, $current_server) {
+  $list = array();
+  $list[] = array('data' => t('Repository:'), 'class' => array('server-header'));
+  $current_path = drupal_get_path_alias($_GET['q']);
+  
+  $i = 0;
+  
+  foreach ($servers as $url => $server) {
+    $classes = array();
+    $query = array(
+      'repository' => $i,
+    );
+    
+    // If the sort option is currently active, handle it differently
+    if ($current_server == $i) {
+      $classes[] = 'server-active';
+    }
+    else {
+      $classes[] = 'server-inactive';
+    }
+    
+    $list[] = array(
+      'data' => l($server['name'], $current_path, array('query' => $query, 'class' => array())),
+      'class' => $classes,
+    );
+    
+    $i += 1;
+  }
+
+  return theme('item_list', array(
+      'items' => $list, 
+      'type' => 'ul',
+      'attributes' => array('class' => array('project-browser-servers-list'))));
+}
+
 
 /**
  * Returns a list of sort options
@@ -295,10 +333,18 @@ function project_browser_filters_form_submit($form, &$form_state) {
  * @return array
  *    Array containing all available categories or FALSE if no categories
  */
-function project_browser_get_categories($type, $condensed = FALSE) {
+function project_browser_get_categories($type) {
   $categories = array();
   
-  $categories_raw = project_browser_fetch_categories($type);
+  // Get the server to use from SESSION
+  if (isset($_SESSION['project_browser_server_filter'])) {
+    $use_server = $_SESSION['project_browser_server_filter'];
+  }
+  else {
+    $use_server = 0;
+  }
+  
+  $categories_raw = project_browser_fetch_categories($type, $use_server);
 
   if (is_array($categories_raw) AND !empty($categories_raw)) {
     foreach ($categories_raw as $url => $modules) {
@@ -314,13 +360,6 @@ function project_browser_get_categories($type, $condensed = FALSE) {
   
   if (is_array($categories) AND !empty($categories)) {
     ksort($categories);
-    
-    // Remove categories from the list if they are not on the condensed list
-    if ($condensed) {
-      $allowed = array_flip(variable_get('project_browser_condensed_categories_' . $type, 
-        array('administration', 'media', 'content', 'developer', 'user-management')));
-      $categories = array_intersect_key($categories, $allowed);
-    }
     
     return $categories;
   }
@@ -520,8 +559,7 @@ function project_browser_get_queued_releases() {
  *   Returns an array of results
  */
 function project_browser_fetch_results($filters) {
-  $servers = project_browser_get_servers();
-  
+  $servers = project_browser_get_servers($filters['server']);
   // Attempt to retrieve the cached version of this page
   $cid = md5(serialize(array_merge($filters, $servers)));
   
@@ -534,12 +572,13 @@ function project_browser_fetch_results($filters) {
     'total' => 0,
   );
   
+  unset($filters['server']);
+  
   foreach ($servers as $url => $server) {
     $local_filters = $filters;
     
-    // FIXME - Handle when one server runs out of results before another...
-    // Only request a certain amount of results from each server to fill one page
-    $local_filters['requested'] = floor($filters['requested'] / count($servers));
+    // We are not using this right now because we only expect to handle 1 server at a time currently
+    // $local_filters['requested'] = floor($filters['requested'] / count($servers));
     
     // Send only the relevant categories to the server
     if (isset($filters['categories'])) {
@@ -605,8 +644,8 @@ function project_browser_fetch_results($filters) {
  * @return array
  *   Returns an array of the categories
  */
-function project_browser_fetch_categories($type) {
-  $servers = project_browser_get_servers();
+function project_browser_fetch_categories($type, $use_server = 'all') {
+  $servers = project_browser_get_servers($use_server);
   
   // Attempt to retrieve the cached version of this page
   $cid = md5('categories_'. $type . serialize($servers));
@@ -668,7 +707,7 @@ function project_browser_fetch_categories($type) {
  *   Returns an associative array of servers, populated from the project_browser_servers variable, 
  *   in 'url => name' format
  */
-function project_browser_get_servers() {
+function project_browser_get_servers($use_server = 'all') {
   // FIXME - Change the link once drupal.org is ready
   $servers = array(
     'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/project_browser/server' => array(
@@ -681,23 +720,34 @@ function project_browser_get_servers() {
     // Process the variable and add the servers to the list
     $custom_servers = array();
 
-    $list = explode("\n", $string);
+    $list = explode("\n", $servers_raw);
     $list = array_map('trim', $list);
     $list = array_filter($list, 'strlen');
     
     foreach ($list as $position => $text) {
-      $method = $name = $key = FALSE;
+      $method = $name = $url = FALSE;
       
       $matches = array();
-      if (preg_match('/(.*)\|(.*)|(.*)/', $text, $matches)) {
-        $key = $matches[1];
+      if (preg_match('/(.*)\|(.*)\|(.*)/', $text, $matches)) {
+        $url = $matches[1];
         $method = $matches[2];
         $name = $matches[3];
-        $custom_servers[$key] = array('name' => $name, 'method' => $method);
+        $custom_servers[$url] = array('name' => $name, 'method' => $method);
       }
     }
     
     $servers = array_merge($servers, $custom_servers);
+  }
+  
+  // Filter out servers if necessary
+  if ($use_server !== 'all') {
+    $i = 0;
+    foreach ($servers as $url => $server) {
+      if ($use_server != $i) {
+        unset($servers[$url]);
+      }
+      $i += 1;
+    }
   }
   
   return $servers;

@@ -58,15 +58,6 @@ function project_browser_menu() {
     'type' => MENU_LOCAL_ACTION,
     'context' => MENU_CONTEXT_INLINE,
   );
-  $items['admin/modules/project-browser/filters/%'] = array(
-    'title' => 'Filters Settings',
-    'description' => 'Set up the Filters Here',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('project_browser_filters_admin', 4),
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_LOCAL_ACTION,
-    'context' => MENU_CONTEXT_INLINE,
-  );
   
   $items['admin/modules/project-browser'] = array(
     'title' => 'Project Browser',
@@ -181,32 +172,10 @@ function project_browser_admin() {
     '#title' => t('Servers'),
     '#default_value' => variable_get('project_browser_servers', ''),
     '#description' => t("Add new servers to use for the Project Browser, one per line, in 
-      the 'url|Server Name' format. Drupal.org is added by default, and doesn't need to be 
+      the 'url|method|Server Name' format. Drupal.org is added by default, and doesn't need to be 
       set here."),
     '#required' => FALSE,
   );
-
-  return system_settings_form($form);
-}
-
-/**
- * Admin Settings Form
- */
-function project_browser_filters_admin($form, &$form_state, $type) {
-  if ($categories = project_browser_get_categories($type)) {
-    $form['categories'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Categories'),
-      '#collapsible' => FALSE,
-      '#collapsed' => FALSE,
-    );
-    $form['categories']['project_browser_condensed_categories_' . $type] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Displayed Categories'),
-      '#options' => $categories,
-      '#default_value' => variable_get('project_browser_condensed_categories_' . $type, array()),
-    );
-  }
 
   return system_settings_form($form);
 }
@@ -368,9 +337,6 @@ function project_browser_preprocess_project_browser_list(&$variables) {
     '#theme' => 'project_browser_block',
     'title' => t('Filters'), 
     'content' => drupal_render(drupal_get_form('project_browser_filters_form', $variables['type'])),
-    '#contextual_links' => array(
-      'project_browser_filters' => array('admin/modules/project-browser/filters', array($variables['type'])),
-    ),
   );
   $variables['filters'] = render($filters);
   
