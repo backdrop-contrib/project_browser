@@ -1,5 +1,13 @@
 /* $Id$ */
 
+.project-browser-selected-release {
+  display: none;
+}
+
+.project-browser-show-releases-link {
+  cursor: pointer;
+}
+
 div.item-list ul.project-browser-sort-list, 
 div.item-list ul.project-browser-servers-list {
   margin: 0;

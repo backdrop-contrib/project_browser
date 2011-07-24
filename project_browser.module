@@ -8,9 +8,9 @@
  * admin pages, and install them.
  * 
  * TODO - Add a context to pages showing the filters currently used
- * FIXME - Figure out why some themes are showing as installed correctly but others are not
- * TODO - Changing the Select Releases widget to use jquery instead of AJAX.
  * TODO - Make the error reporting more robust
+ * TODO - Change the Checkboxes in the install queue to red X's
+ * TODO - Change the 'Add to Install queue' checkbox to a toggle link button
  */
 
 module_load_include('inc', 'project_browser', 'project_browser');
