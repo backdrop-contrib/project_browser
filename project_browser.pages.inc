@@ -20,21 +20,7 @@ function project_browser_page($type) {
   drupal_add_library('project_browser', 'jquery.multiselect');
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js', array('scope' => 'footer'));
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js');
-  
-  $js = "
-(function ($) {
-  $('#edit-categories').multiselect({
-    noneSelectedText: '" . t('Choose') . "...',
-    selectedList: 99,
-    minWidth: 500,
-    position: {
-      my: 'right top',
-      at: 'right bottom'
-    }
-  });
-})(jQuery);
-";
-  drupal_add_js($js, array('type' => 'inline', 'scope' => 'footer'));
+  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js', array('scope' => 'footer'));
   
   // Set any filters in the session that are needed
   if (isset($_GET['repository'])) {
