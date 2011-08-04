@@ -15,7 +15,7 @@ function project_browser_get_install_list() {
 }
 
 /**
- * Show an install button for the Install Queue block
+ * Shows an install button for the Install Queue block
  */
 function project_browser_install_button_form($form, &$form_state) {
   $form['submit'] = array(
@@ -30,10 +30,8 @@ function project_browser_install_button_form($form, &$form_state) {
 /**
  * Shows a checkbox that will add a project to the install list
  * 
- * @param array $project
+ * @param $project
  *   A project array object
- * @param bool $queue
- *   Whether this form is used for a queued project. Defaults to false
  */
 function project_browser_install_form($form, &$form_state, $project) {
   $queued_projects = project_browser_get_queued_projects();
@@ -118,11 +116,6 @@ function project_browser_install_queue_ajax($form, $form_state) {
 
 /**
  * Shows a checkbox that will add a project to the install list
- * 
- * @param array $project
- *   A project array object
- * @param bool $queue
- *   Whether this form is used for a queued project. Defaults to false
  */
 function project_browser_install_queue_form($form, &$form_state) {
   $queued_projects = project_browser_get_queued_projects();
@@ -168,7 +161,7 @@ function project_browser_install_queue_form_submit($form, &$form_state) {
 }
 
 /**
- * Form builder for the filters
+ * Builds the filters form
  */
 function project_browser_filters_form($form, &$form_state, $type) {
   $form['search_text'] = array(
@@ -205,7 +198,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
 }
 
 /**
- * Return a themed sort widget for the filters
+ * Returns a themed sort widget for the filters
  */
 function project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction) {
   $sort_list = array();
@@ -251,7 +244,7 @@ function project_browser_get_sort_widget($sort_options, $current_sort_method, $c
 }
 
 /**
- * Return a themed sort widget for the filters
+ * Returns a themed sort widget for the filters
  */
 function project_browser_get_server_widget($servers, $current_server) {
   $list = array();
@@ -314,7 +307,7 @@ function project_browser_get_sort_options($full = FALSE) {
 }
 
 /**
- * Submit handler for filters form
+ * Handles the filters form submit
  */
 function project_browser_filters_form_submit($form, &$form_state) {
   $type = $form_state['values']['project_type'];
@@ -328,10 +321,13 @@ function project_browser_filters_form_submit($form, &$form_state) {
 }
 
 /**
- * Helper function to get all available categories.
+ * Returns all available categories for a project type
  * 
- * @return array
- *    Array containing all available categories or FALSE if no categories
+ * @param $type
+ *   The type of project to get the categories for. Example: 'module' or 'theme'
+ * 
+ * @return
+ *   Array containing all available categories or FALSE if no categories
  */
 function project_browser_get_categories($type) {
   $categories = array();
@@ -367,11 +363,11 @@ function project_browser_get_categories($type) {
 }
 
 /**
- * Helper function that prepares the categories for sending to the servers as filters
+ * Prepares the categories for sending to the servers as filters
  * 
- * @param array $raw_cats
- *   The categories from $form_state['values']
- * @param string $type
+ * @param $raw_cats
+ *   An array of categories from $form_state['values']
+ * @param $type
  *   The type of project to prepare the categories for, eg 'module' or 'theme'
  */
 function project_browser_prepare_categories($raw_cats, $type) {
@@ -406,13 +402,14 @@ function project_browser_prepare_categories($raw_cats, $type) {
 }
 
 /**
- * Helper function to check if a project is enabled
+ * Checks if a project is enabled
  * 
  * @param $type
  *   The type of project. Could be 'theme' or 'module'
  * @param $name
  *   The short name of the project
- * @return bool
+ * 
+ * @return
  *   TRUE if the project is enabled, FALSE otherwise
  */
 function _project_browser_is_project_enabled($type, $name) {
@@ -429,7 +426,7 @@ function _project_browser_is_project_enabled($type, $name) {
 }
 
 /**
- * Helper function to get the currently listed projects
+ * Gets the currently listed projects from the session
  */
 function project_browser_get_listed_projects() {
   if (isset($_SESSION['project_browser_listed_projects'])) {
@@ -440,7 +437,7 @@ function project_browser_get_listed_projects() {
 }
 
 /**
- * Helper function to get the currently queued projects
+ * Gets the currently queued projects from the session
  */
 function project_browser_get_queued_projects($type = NULL) {
   $projects = array();
@@ -462,7 +459,16 @@ function project_browser_get_queued_projects($type = NULL) {
 }
 
 /**
- * Helper function to get the newly installed projects
+ * Gets a release from a project and a release_name
+ */
+function project_browser_get_release($release_name, $project) {
+  $release_data = project_browser_get_project_release_data($project);
+  
+  return isset($release_data['releases'][$release_name]) ? $release_data['releases'][$release_name] : FALSE;
+}
+
+/**
+ * Gets the newly installed projects from the session
  */
 function project_browser_get_installed_projects() {
   $projects = array();
@@ -493,7 +499,7 @@ function project_browser_install_queue_remove($project) {
 }
 
 /**
- * Helper function to get the currently queued releases
+ * Gets the currently queued releases from the session
  */
 function project_browser_get_queued_releases() {
   $releases = array();
@@ -555,7 +561,8 @@ function project_browser_get_queued_releases() {
  * 
  * @param $filters
  *   An associative array of queries to use to filter results
- * @return array
+ * 
+ * @return
  *   Returns an array of results
  */
 function project_browser_fetch_results($filters) {
@@ -641,7 +648,10 @@ function project_browser_fetch_results($filters) {
  * 
  * @param $type
  *   The type of project we are getting categories for
- * @return array
+ * @param $use_server
+ *   (Optional) The server to use. Defaults to 'all'.
+ * 
+ * @return
  *   Returns an array of the categories
  */
 function project_browser_fetch_categories($type, $use_server = 'all') {
@@ -703,7 +713,7 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
 /**
  * Gets the servers to use for fetching results
  * 
- * @return array
+ * @return
  *   Returns an associative array of servers, populated from the project_browser_servers variable, 
  *   in 'url => name' format
  */
@@ -758,7 +768,8 @@ function project_browser_get_servers($use_server = 'all') {
  * 
  * @param $project
  *   The project to get the releases for
- * @return array
+ * 
+ * @return
  *   An array of releases for this project
  */
 function project_browser_get_project_release_data($project) {
@@ -907,7 +918,7 @@ function project_browser_download_project($url) {
 }
 
 /**
- * Batch function to install a single release of a project
+ * Installs a single release of a project during batch, for example
  */
 function _project_browser_batch_install_release($release_name, $project, &$context) {
   module_load_include('inc', 'project_browser', 'project_browser.pages');
@@ -935,7 +946,7 @@ function _project_browser_batch_install_release($release_name, $project, &$conte
 }
 
 /**
- * Show a message and finish up the batch
+ * Shows a message and finish up the batch
  */
 function _project_browser_batch_install_releases_finished($success, $results, $operations) {
   drupal_get_messages();

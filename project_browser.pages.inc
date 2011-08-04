@@ -9,19 +9,15 @@
 /**
  * Page to display the projects.
  * 
- * @param string $type
+ * @param $type
  *   Type of project to view, ie 'module' or 'theme'
+ * 
  * @return 
  *   Themed list of the projects
  */
 function project_browser_page($type) {
-  drupal_add_library('system', 'ui.widget');
-  drupal_add_library('system', 'ui.dialog');
-  drupal_add_library('system', 'ui.position');
-  
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/jquery.multiselect.css', array('preprocess' => FALSE));
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
-  
+  module_load_include('inc', 'project_browser', 'project_browser');
+  drupal_add_library('project_browser', 'jquery.multiselect');
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js', array('scope' => 'footer'));
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js');
   
@@ -151,7 +147,7 @@ function project_browser_page($type) {
 /**
  * Page to install projects
  * 
- * @param string $op
+ * @param $op
  *    Operation to preform.
  */
 function project_browser_installation_page($op) {
@@ -177,6 +173,7 @@ function project_browser_installation_page($op) {
  * project
  */
 function project_browser_installation_select_versions_page() {
+  module_load_include('inc', 'project_browser', 'project_browser');
   // Show a form that lets the user select which version of the projects to install
   $queued_projects = project_browser_get_queued_projects();
   
@@ -186,10 +183,11 @@ function project_browser_installation_select_versions_page() {
 /**
  * Form builder for the select versions form
  * 
- * @param array $projects
+ * @param $projects
  *   An array of projects to get the releases for
  */
 function project_browser_installation_select_versions_form($form, &$form_state, $projects) {
+  module_load_include('inc', 'project_browser', 'project_browser');
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/select_releases.js');
   
   $form = array();
@@ -298,6 +296,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
  * Submit handler for the select versions form
  */
 function project_browser_installation_select_versions_form_submit($form, &$form_state) {
+  module_load_include('inc', 'project_browser', 'project_browser');
   // Store maintenance_mode setting so we can restore it when done.
   $_SESSION['maintenance_mode'] = variable_get('maintenance_mode', FALSE);
   if ($form_state['values']['maintenance_mode'] == TRUE) {
@@ -334,20 +333,12 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
 }
 
 /**
- * Get a release from a project and a release_name
- */
-function project_browser_get_release($release_name, $project) {
-  $release_data = project_browser_get_project_release_data($project);
-  
-  return isset($release_data['releases'][$release_name]) ? $release_data['releases'][$release_name] : FALSE;
-}
-
-/**
  * Task page for the Enable projects installation task
  * 
  * Show a form which lets the user enable the newly installed projects
  */
 function project_browser_installation_enable_page() {
+  module_load_include('inc', 'project_browser', 'project_browser');
   $installed_projects = project_browser_get_installed_projects();
   
   return drupal_get_form('project_browser_installation_enable_form', $installed_projects);
@@ -356,7 +347,7 @@ function project_browser_installation_enable_page() {
 /**
  * Form builder for the select versions form
  * 
- * @param array $projects
+ * @param $projects
  *   An array of projects to get the releases for
  */
 function project_browser_installation_enable_form($form, &$form_state, $projects) {

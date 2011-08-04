@@ -13,8 +13,6 @@
  * TODO - Change the 'Add to Install queue' checkbox to a toggle link button
  */
 
-module_load_include('inc', 'project_browser', 'project_browser');
-
 /**
  * Display help and module information
  */
@@ -53,6 +51,7 @@ function project_browser_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('project_browser_admin'),
     'access arguments' => array('access administration pages'),
+    'file' => 'project_browser.admin.inc',
   );
   
   $items['admin/modules/project-browser'] = array(
@@ -149,39 +148,13 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
   }
 }
 
-// ======================================
-// Administration Page:
-// ======================================
-
-/**
- * Admin Settings Form
- */
-function project_browser_admin() {
-  $form['main'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Main settings'),
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-  );
-  $form['main']['project_browser_servers'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Repositories'),
-    '#default_value' => variable_get('project_browser_servers', ''),
-    '#description' => t("Add new repositories to use for the Project Browser, one per line, in 
-      the 'url|method|Site Name' format. Drupal.org is added by default, and doesn't need to be 
-      set here."),
-    '#required' => FALSE,
-  );
-
-  return system_settings_form($form);
-}
-
 /**
  * Implementation of hook_forms()
  * 
  * We need this so that the install checkboxes will work
  */
 function project_browser_forms() {
+  module_load_include('inc', 'project_browser', 'project_browser');
   $forms = array();
   
   $projects = project_browser_get_listed_projects();
@@ -246,6 +219,7 @@ function project_browser_theme($existing, $type, $theme, $path) {
  *     - current_task : the current task
  */
 function project_browser_preprocess_project_browser_install(&$variables) {
+  module_load_include('inc', 'project_browser', 'project_browser.pages');
   // Add the themed list
   $variables['task_list'] = project_browser_installation_task_list($variables['current_task']);
 }
@@ -288,6 +262,7 @@ function project_browser_preprocess_project_browser_block(&$variables) {
  *     - projects_list : array of all projects
  */
 function project_browser_preprocess_project_browser_list(&$variables) {
+  module_load_include('inc', 'project_browser', 'project_browser');
   drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css');
   
   if (is_array($variables['projects_list']) AND !empty($variables['projects_list'])) {
@@ -353,6 +328,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
  *     - project : associative array of project variables
  */
 function project_browser_preprocess_project_browser_project(&$variables) {
+  module_load_include('inc', 'project_browser', 'project_browser');
   $project = $variables['project'];
   
   $variables['title'] = l(check_plain($project['title']), check_url($project['project url']));
@@ -393,4 +369,33 @@ function project_browser_preprocess_project_browser_project(&$variables) {
     $install_form = drupal_get_form('project_browser_' . $project['name'] . '_install_form', $project);
     $variables['install'] = drupal_render($install_form);
   }
+}
+
+/**
+ * Implements hook_library().
+ * 
+ * This is used for the categories multiselect widget library
+ */
+function project_browser_library() {
+  // Library One.
+  $libraries['jquery.multiselect'] = array(
+    'title' => 'jQuery MultiSelect', 
+    'website' => 'http://example.com/library-1', 
+    'version' => '1.10a', 
+    'js' => array(
+      drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js' => array(),
+    ), 
+    'css' => array(
+      drupal_get_path('module', 'project_browser') . '/css/jquery.multiselect.css' => array(
+        'type' => 'file', 
+        'media' => 'screen',
+      ),
+    ),
+    'dependencies' => array(
+      array('system', 'ui.widget'),
+      array('system', 'ui.dialog'),
+      array('system', 'ui.position'),
+    ),
+  );
+  return $libraries;
 }

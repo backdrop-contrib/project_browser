@@ -1,12 +1,5 @@
 name = Project Browser
 description = A Project Browser that allows users to browse for and install modules and themes from their Drupal site
 package = Core
-version = "7.x-0.1"
 core = 7.x
 dependencies[] = update
-files[] = project_browser.module
-files[] = project_browser.pages.inc
-files[] = project_browser_list.tpl.php
-files[] = project_browser_project.tpl.php
-files[] = project_browser.css
-files[] = project_browser.inc
