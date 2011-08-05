@@ -125,7 +125,7 @@ function project_browser_install_queue_form($form, &$form_state) {
   foreach ($queued_projects as $project) {
     $form['projects'][$project['name']]['c_box'] = array(
       '#type' => 'checkbox',
-      '#title' => $project['title'],
+      '#title' => check_plain($project['title']),
       '#default_value' => 1,
       '#ajax' => array(
         'callback' => 'project_browser_install_queue_ajax',
@@ -658,7 +658,7 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
   $servers = project_browser_get_servers($use_server);
   
   // Attempt to retrieve the cached version of this page
-  $cid = md5('categories_'. $type . serialize($servers));
+  $cid = md5('categories_' . $type . serialize($servers));
   
   if ($cache = cache_get($cid)) {
     return $cache->data;
@@ -839,7 +839,7 @@ function project_browser_download_project($url) {
   if (!empty($archive_errors)) {
     if (!empty($archive_errors)) {
       foreach ($archive_errors as $error) {
-        drupal_set_message($error, 'error');
+        drupal_set_message(check_plain($error), 'error');
       }
     }
     return array(

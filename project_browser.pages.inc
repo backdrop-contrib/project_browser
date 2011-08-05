@@ -233,7 +233,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       '#title' => t('Select release for @project', array('@project' => $project['title'])),
       '#options' => $releases_list,
       '#default_value' => key($releases_list),
-      '#prefix' => '<div class="project-browser-releases-wrapper project-browser-release-' . $project['name'] .'">',
+      '#prefix' => '<div class="project-browser-releases-wrapper project-browser-release-' . $project['name'] . '">',
       '#suffix' => '</div>',
       '#attributes' => array(
         'class' => array('project-browser-releases-radios'),
@@ -242,7 +242,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
     );
     $form['releases'][$project['name']]['selected_text'] = array(
       '#type' => 'item',
-      '#prefix' => '<div class="project-browser-selected-release project-browser-selected-release-' . $project['name'] .'">',
+      '#prefix' => '<div class="project-browser-selected-release project-browser-selected-release-' . $project['name'] . '">',
       '#suffix' => '</div>',
       '#markup' => reset($releases_list),
     );
@@ -255,7 +255,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
     }
     if (count($releases_list) > 1) {
       $form['releases'][$project['name']]['selected_text']['#markup'] .= 
-        " (<span class='project-browser-show-releases-link' rel='". $project['name'] ."'>" . t('change release') . "</span>)";
+        " (<span class='project-browser-show-releases-link' rel='" . $project['name'] . "'>" . t('change release') . "</span>)";
     }
   }
 
@@ -356,11 +356,11 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
       if (isset($modules[$project['name']])) {
         foreach ($modules[$project['name']]->info['dependencies'] as $dependency) {
           if (isset($modules[$dependency])) {
-            $dependencies[] = $modules[$dependency]->info['name'] .' ('. t('Installed') .')';
+            $dependencies[] = $modules[$dependency]->info['name'] . ' (' . t('Installed') . ')';
           }
           else {
             $dependency_check = FALSE;
-            $dependencies[] = $dependency .' ('. t('Missing') .')';
+            $dependencies[] = $dependency . ' (' . t('Missing') . ')';
           }
         }
         if ($dependency_check) {
