@@ -378,7 +378,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
  */
 function project_browser_library() {
   // Library One.
-  $libraries['jquery.multiselect'] = array(
+  $libraries['multiselect'] = array(
     'title' => 'jQuery MultiSelect', 
     'website' => 'http://example.com/library-1', 
     'version' => '1.10a', 

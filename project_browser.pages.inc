@@ -17,7 +17,7 @@
  */
 function project_browser_page($type) {
   module_load_include('inc', 'project_browser', 'project_browser');
-  drupal_add_library('project_browser', 'jquery.multiselect');
+  drupal_add_library('project_browser', 'multiselect');
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js');
   drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js');
   

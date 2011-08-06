@@ -9,5 +9,5 @@
         at: 'right bottom'
       }
     });
-  }
+  });
 })(jQuery);
