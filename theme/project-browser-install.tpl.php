@@ -19,4 +19,3 @@
 <div class="project-browser-install-main">
   <?php print $main_content; ?>
 </div>
-
