@@ -1,0 +1,65 @@
+<?php
+/**
+* Administration tests for Project Browser.
+*/
+class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
+  protected $privileged_user;
+  
+  /**
+   * Implements getInfo().
+   */
+  public static function getInfo() {
+    return array (
+      'name' => t('Project Browser Install Project Test'),
+      'description' => t('Attempts to install a project.'),
+      'group' => t('Project Browser'),
+    );
+  }
+  
+  public function setUp() {
+    parent::setUp('project_browser');  // Enable any modules required for the test
+    // Create and log in our privileged user.
+    $this->privileged_user = $this->drupalCreateUser(array(
+      'use project browser',
+      ));
+    $this->drupalLogin($this->privileged_user);
+  }
+  
+  public function testProjectBrowserSearchViews() {
+    // Create node to edit.    
+    $edit = array();
+    $edit['search_text'] = 'views';
+    $this->drupalPost('admin/modules/project-browser/modules', $edit, t('Filter'));
+    $this->assertText('Showing 1 to');
+  }
+  
+  public function testProjectBrowserGetProjects() {
+    // Attempt to fetch the default projects   
+    $edit = array();
+    $edit['search_text'] = '';
+    $this->drupalPost('admin/modules/project-browser/modules', $edit, t('Filter'));
+    $this->assertText('Showing 1 to');
+  }
+
+  public function testProjectBrowserProjectEnabled() {
+    // Make sure project enabled detection works 
+    module_load_include('inc', 'project_browser', 'project_browser');
+    $this->assertTrue(_project_browser_is_project_enabled('module', 'project_browser'), t('Make sure project enabled detection works.'));
+  }
+
+  public function testProjectBrowserAddToQueue() {
+    // Add some projects to the install queue
+    module_load_include('inc', 'project_browser', 'project_browser');
+    $this->drupalGet('admin/modules/project-browser/modules');
+    
+    $projects = project_browser_get_listed_projects();
+    
+    foreach ($projects as $project) {
+      project_browser_install_queue_add($project);
+    }
+    
+    $this->drupalGet('admin/modules/project-browser/modules');
+    $this->assertNoText('Install queue is empty.');
+  }
+}
+?>

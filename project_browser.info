@@ -3,3 +3,4 @@ description = A Project Browser that allows users to browse for and install modu
 package = Core
 core = 7.x
 dependencies[] = update
+files[] = project_browser.test
