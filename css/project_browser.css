@@ -1,3 +1,22 @@
+#project-browser-install-queue .form-checkbox {
+  display: none;
+}
+
+#project-browser-install-queue label {
+  cursor: pointer;
+  padding-left: 20px;
+  background: url("../images/red-x.png") no-repeat scroll left 2px transparent;
+}
+
+.add-to-queue-checkbox {
+  display: none;
+}
+
+.project-status label {
+  cursor: pointer;
+  color: #0074BD;
+}
+
 .project-browser-selected-release {
   display: none;
 }
