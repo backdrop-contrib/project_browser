@@ -28,153 +28,6 @@ function project_browser_install_button_form($form, &$form_state) {
 }
 
 /**
- * Shows a checkbox that will add a project to the install list
- * 
- * @param $project
- *   A project array object
- */
-function project_browser_install_form($form, &$form_state, $project) {
-  $queued_projects = project_browser_get_queued_projects();
-  
-  $form['#prefix'] = "<div id='add-to-queue-form-" . $project['name'] . "'>";
-  $form['#suffix'] = "</div>";
-  
-  $form['add_to_queue'] = array(
-    '#type' => 'checkbox',
-    '#title' => isset($queued_projects[$project['name']]) ? t('Remove from Install queue') : t('Add to Install queue'),
-    '#default_value' => isset($queued_projects[$project['name']]) ? 1 : 0,
-    '#attributes' => array('class' => array('add-to-queue-checkbox', 'install-checkbox-' . $project['name'])),
-    '#ajax' => array(
-      'callback' => 'project_browser_install_form_ajax',
-      'wrapper' => 'project-browser-install-queue',
-      'effect' => 'fade',
-      'speed' => 1000,
-      'progress' => array(
-        'type' => 'throbber',
-        'message' => '',
-      ),
-    ),
-  );
-  $form['project'] = array(
-    '#type' => 'value',
-    '#value' => $project,
-  );
-
-  return $form;
-}
-
-/**
- * Implements hook_form_submit().
- */
-function project_browser_install_form_submit($form, &$form_state) {
-  $project = $form_state['values']['project'];
-  if ($form_state['values']['add_to_queue']) {
-    // Add the project to the install list
-    project_browser_install_queue_add($project);
-  }
-  else {
-    // Remove the project from the install list
-    project_browser_install_queue_remove($project);
-  }
-}
-
-/**
- * AJAX callback for the install form
- */
-function project_browser_install_form_ajax($form, $form_state) {
-  project_browser_install_form_submit($form, &$form_state);
-  
-  $project = $form_state['values']['project'];
-  
-  $commands = array();
-  
-  // Refresh the add to queue link
-  $commands[] = ajax_command_replace('#add-to-queue-form-' . $project['name'], drupal_render(drupal_get_form('project_browser_' . $project['name'] . '_install_form', $project)));
-  // Add a visual "changed" marker to the add to queue link
-  $commands[] = ajax_command_changed('#add-to-queue-form-' . $project['name']);
-  // Refresh the install queue
-  $commands[] = ajax_command_replace('#project-browser-install-queue', project_browser_get_install_list());
-  // Add a visual "changed" marker to the install queue
-  $commands[] = ajax_command_changed('#project-browser-install-queue');
-  
-  return array('#type' => 'ajax', '#commands' => $commands);
-}
-
-/**
- * AJAX callback for the install queue form checkboxes
- */
-function project_browser_install_queue_ajax($form, $form_state) {
-  $commands = array();
-  
-  foreach ($form_state['values']['projects'] as $item) {
-    $project = $item['project'];
-    if (!$item['c_box']) {
-      // If the checkbox is unchecked, we remove it from the install queue
-      project_browser_install_queue_remove($project);
-      
-      // Refresh the add to queue link
-      $commands[] = ajax_command_replace('#add-to-queue-form-' . $project['name'], drupal_render(drupal_get_form('project_browser_' . $project['name'] . '_install_form', $project)));
-      // Add a visual "changed" marker to the add to queue link
-      $commands[] = ajax_command_changed('#add-to-queue-form-' . $project['name']);
-    }
-  }
-  
-  // Replace the queue with the new queue html
-  $commands[] = ajax_command_replace(NULL, project_browser_get_install_list());
-  
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
-}
-
-/**
- * Shows a checkbox that will add a project to the install list
- */
-function project_browser_install_queue_form($form, &$form_state) {
-  $queued_projects = project_browser_get_queued_projects();
-  
-  $form['#tree'] = TRUE;
-  
-  foreach ($queued_projects as $project) {
-    $form['projects'][$project['name']]['c_box'] = array(
-      '#type' => 'checkbox',
-      '#title' => check_plain($project['title']),
-      '#default_value' => 1,
-      '#ajax' => array(
-        'callback' => 'project_browser_install_queue_ajax',
-        'wrapper' => 'project-browser-install-queue',
-        'effect' => 'fade',
-        'speed' => 1000,
-        'progress' => array(
-          'type' => 'throbber',
-          'message' => '',
-        ),
-      ),
-    );
-      
-    $form['projects'][$project['name']]['project'] = array(
-      '#type' => 'value',
-      '#value' => $project,
-    );
-  }
-
-  return $form;
-}
-
-/**
- * Implements hook_form_submit().
- */
-function project_browser_install_queue_form_submit($form, &$form_state) {
-  foreach ($form_state['values']['projects'] as $item) {
-    $project = $item['project'];
-    if (!$item['c_box']) {
-      project_browser_install_queue_remove($project);
-    }
-  }
-}
-
-/**
  * Builds the filters form
  */
 function project_browser_filters_form($form, &$form_state, $type) {
@@ -733,13 +586,13 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
  */
 function project_browser_get_servers($use_server = 'all') {
   // FIXME - Change the link once drupal.org is ready
-  $servers = array(
+  $servers = variable_get('project_browser_default_server', array(
     'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/project_browser/server' => array(
       'name' => 'Drupal.org',
       'method' => 'json',
     ),
-  );
-
+  ));
+  
   if ($servers_raw = variable_get('project_browser_servers', '')) {
     // Process the variable and add the servers to the list
     $custom_servers = array();

@@ -17,11 +17,23 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
   }
   
   public function setUp() {
-    parent::setUp('project_browser');  // Enable any modules required for the test
+    parent::setUp('project_browser', 'project_browser_test');  // Enable any modules required for the test
+    
+    // Set the default server variable
+    $server_url = url('project_browser_test/query', array('absolute' => TRUE));
+    variable_set('project_browser_default_server', array(
+      $server_url => array(
+        'name' => 'Test Server',
+        'method' => 'json',
+      ),
+    ));
+    
     // Create and log in our privileged user.
     $this->privileged_user = $this->drupalCreateUser(array(
       'use project browser',
-      ));
+    ));
+    // Enable sessions.
+    $this->sessionReset($this->privileged_user->uid);
     $this->drupalLogin($this->privileged_user);
   }
   
@@ -52,11 +64,7 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
     module_load_include('inc', 'project_browser', 'project_browser');
     $this->drupalGet('admin/modules/project-browser/modules');
     
-    $projects = project_browser_get_listed_projects();
-    
-    foreach ($projects as $project) {
-      project_browser_install_queue_add($project);
-    }
+    // TODO - Simulate adding a project to the install queue
     
     $this->drupalGet('admin/modules/project-browser/modules');
     $this->assertNoText('Install queue is empty.');

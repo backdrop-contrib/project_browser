@@ -1,0 +1,5 @@
+name = "Project Browser module tests"
+description = "Support module for Project Browser related testing."
+package = Testing
+core = 7.x
+hidden = TRUE

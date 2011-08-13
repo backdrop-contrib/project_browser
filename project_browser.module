@@ -9,6 +9,7 @@
  * 
  * TODO - Add a context to pages showing the filters currently used
  * TODO - Make the error reporting more robust
+ * TODO - Create a test for the get releases HTML page
  */
 
 /**
@@ -89,7 +90,57 @@ function project_browser_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'project_browser.pages.inc',
   );
+  
+  $items['project-browser/%/install-queue/%/%'] = array(
+    'page callback' => 'project_browser_install_queue_callback',
+    'page arguments' => array(1, 3, 4),
+    'access arguments' => array('use project browser'),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
+}
+
+/**
+ * Page callback that allows for adding to and removing from the install queue
+ */
+function project_browser_install_queue_callback($method, $op, $project_name) {
+  module_load_include('inc', 'project_browser', 'project_browser');
+  $projects = project_browser_get_listed_projects();
+  if (isset($projects[$project_name])) {
+    $project = $projects[$project_name];
+    
+    switch ($op) {
+      case 'add':
+        project_browser_install_queue_add($project);
+        break;
+      case 'remove':
+        project_browser_install_queue_remove($project);
+        break;
+    }
+  }
+  
+  switch ($method) {
+    case 'nojs':
+      // Redirect to the page it came from
+      $redirect = (isset($_GET['destination'])) ? $_GET['destination'] : 'admin/modules/project-browser';
+      
+      drupal_goto($redirect);
+      break;
+    case 'ajax':
+      $commands = array();
+      
+      // Refresh the install queue
+      $commands[] = ajax_command_replace('#project-browser-install-queue', project_browser_get_install_list());
+      // Add a visual "changed" marker to the install queue
+      $commands[] = ajax_command_changed('#project-browser-install-queue');
+      // Refresh the add to queue link
+      $commands[] = ajax_command_replace('#add-to-queue-link-' . $project['name'], project_browser_add_remove_queue_link($project['name']));
+      // Add a visual "changed" marker to the add to queue link
+      $commands[] = ajax_command_changed('#add-to-queue-link-' . $project['name']);
+      
+      return ajax_deliver(array('#type' => 'ajax', '#commands' => $commands));
+      break;
+  }
 }
 
 /**
@@ -144,27 +195,6 @@ function project_browser_menu_local_tasks_alter(&$data, $router_item, $root_path
       }
       break;
   }
-}
-
-/**
- * Implements of hook_forms()
- * 
- * We need this so that the install checkboxes will work
- */
-function project_browser_forms() {
-  module_load_include('inc', 'project_browser', 'project_browser');
-  $forms = array();
-  
-  $projects = project_browser_get_listed_projects();
-  foreach ($projects as $project) {
-    $forms['project_browser_' . $project['name'] . '_install_form'] = array(
-      'callback' => 'project_browser_install_form',
-      'callback_arguments' => array($project['name'], $project),
-      'file' => 'project_browser.inc',
-    );
-  }
-  
-  return $forms;
 }
 
 // ======================================
@@ -226,19 +256,25 @@ function project_browser_preprocess_project_browser_install(&$variables) {
  * Add some variables for the projects install queue theme
  */
 function project_browser_preprocess_project_browser_install_queue(&$variables) {
-  $queue_html = '';
+  $build = array();
   if (empty($variables['projects'])) {
-    $queue_html .= t('Install queue is empty.');
+    $build['empty_text'] = array(
+      '#markup' => t('Install queue is empty.'),
+    );
   }
   else {
-    $queue_html .= drupal_render(drupal_get_form('project_browser_install_queue_form'));
-    $queue_html .= "<div class='project-browser-install-link'>";
-    $queue_html .= drupal_render(drupal_get_form('project_browser_install_button_form'));
-    $queue_html .= "</div>";
+    foreach ($variables['projects'] as $project) {
+      $build['queued-item-' . $project['name']] = array(
+        '#prefix' => "<div class='project-browser-install-queue-item'>",
+        '#markup' => project_browser_add_remove_queue_link($project['name'], $project['title'], 'remove-queue-link'),
+        '#suffix' => "</div>",
+      );
+    }
+    $build['install-link'] = drupal_get_form('project_browser_install_button_form');
   }
   
   // Add the install button
-  $variables['queue_html'] = $queue_html;
+  $variables['queue_html'] = drupal_render($build);
 }
 
 /**
@@ -364,9 +400,41 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   }
   else {
     $variables['status'] = '';
-    $install_form = drupal_get_form('project_browser_' . $project['name'] . '_install_form', $project);
-    $variables['install'] = drupal_render($install_form);
+    $variables['install'] = project_browser_add_remove_queue_link($project['name']);
   }
+}
+
+/**
+ * Builds the add/remove project to install queue link
+ */
+function project_browser_add_remove_queue_link($project_name, $title = NULL, $id_prefix = 'add-to-queue-link') {
+  $queued_projects = project_browser_get_queued_projects();
+  if (!$title) {
+    $title = isset($queued_projects[$project_name]) ? t('Remove from Install queue') : t('Add to Install queue');
+  }
+  $op = isset($queued_projects[$project_name]) ? 'remove' : 'add';
+  
+  $build['ajax_link'] = array(
+    '#type' => 'link',
+    '#title' => $title,
+    '#href' => 'project-browser/nojs/install-queue/' . $op . '/'. $project_name,
+    '#options' => array(
+      array(
+        'query' => drupal_get_destination(),
+      )
+    ),
+    '#id' => $id_prefix . '-' . $project_name,
+    '#ajax' => array(
+      'effect' => 'fade',
+      'speed' => 1000,
+      'progress' => array(
+        'type' => 'throbber',
+        'message' => '',
+      ),
+    ),
+  );
+  
+  return drupal_render($build);
 }
 
 /**
