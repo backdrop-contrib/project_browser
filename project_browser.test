@@ -32,8 +32,6 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
     $this->privileged_user = $this->drupalCreateUser(array(
       'use project browser',
     ));
-    // Enable sessions.
-    $this->sessionReset($this->privileged_user->uid);
     $this->drupalLogin($this->privileged_user);
   }
   
@@ -61,12 +59,10 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
 
   public function testProjectBrowserAddToQueue() {
     // Add some projects to the install queue
-    module_load_include('inc', 'project_browser', 'project_browser');
     $this->drupalGet('admin/modules/project-browser/modules');
     
-    // TODO - Simulate adding a project to the install queue
-    
-    $this->drupalGet('admin/modules/project-browser/modules');
+    // Simulate adding a project to the install queue
+    $this->drupalGet('project-browser/nojs/install-queue/add/views?destination=admin/modules/project-browser');
     $this->assertNoText('Install queue is empty.');
   }
 }
