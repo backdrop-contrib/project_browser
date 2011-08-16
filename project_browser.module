@@ -106,7 +106,7 @@ function project_browser_menu() {
 function project_browser_install_queue_callback($method, $op, $project_name) {
   module_load_include('inc', 'project_browser', 'project_browser');
   $projects = project_browser_get_listed_projects();
-  print_r($projects, TRUE);
+  
   if (isset($projects[$project_name])) {
     $project = $projects[$project_name];
     
@@ -118,6 +118,9 @@ function project_browser_install_queue_callback($method, $op, $project_name) {
         project_browser_install_queue_remove($project);
         break;
     }
+  }
+  else {
+    drupal_set_message(t('Error: The project was not found.'), 'error');
   }
   
   switch ($method) {

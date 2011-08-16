@@ -57,13 +57,19 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
     $this->assertTrue(_project_browser_is_project_enabled('module', 'project_browser'), t('Make sure project enabled detection works.'));
   }
 
-  public function testProjectBrowserAddToQueue() {
-    // Add some projects to the install queue
+  public function testProjectBrowserAddRemoveQueue() {
+    // Refresh the page
     $this->drupalGet('admin/modules/project-browser/modules');
     
     // Simulate adding a project to the install queue
-    $this->drupalGet('project-browser/nojs/install-queue/add/views?destination=admin/modules/project-browser');
+    $this->drupalGet('project-browser/nojs/install-queue/add/views', array('query' => array('destination' => 'admin/modules/project-browser')));
     $this->assertNoText('Install queue is empty.');
+    $this->assertNoText('Error: The project was not found.');
+    
+    // Simulate removing a project from the install queue
+    $this->drupalGet('project-browser/nojs/install-queue/remove/views', array('query' => array('destination' => 'admin/modules/project-browser')));
+    $this->assertText('Install queue is empty.');
+    $this->assertNoText('Error: The project was not found.');
   }
 }
 ?>

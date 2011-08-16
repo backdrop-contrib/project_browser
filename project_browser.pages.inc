@@ -70,6 +70,8 @@ function project_browser_page($type) {
   // Save the listed projects in the session so it can be used
   $_SESSION['project_browser_listed_projects'] = $results['projects'];
   
+  $test = project_browser_get_listed_projects();
+  
   $list = array();
   foreach ($results['projects'] as $project) {
     $list[] = $project;
