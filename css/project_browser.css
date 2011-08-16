@@ -1,3 +1,16 @@
+#project-browser-install-button-form {
+  clear: both;
+  margin: 10px 0 0;
+}
+
+#project-browser-install-queue {
+  margin: 5px 0 0;
+}
+
+.project-browser-install-queue-item {
+  margin: 5px 0;
+}
+
 .project-browser-install-queue-items {
   clear: both;
   margin: 0 0 15px;
@@ -8,7 +21,6 @@
 }
 
 .project-browser-install-queue-item a {
-  cursor: pointer;
   padding-left: 20px;
   background: url("../images/red-x.png") no-repeat scroll left 2px transparent;
 }

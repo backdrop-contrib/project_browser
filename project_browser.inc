@@ -18,6 +18,7 @@ function project_browser_get_install_list() {
  * Shows an install button for the Install Queue block
  */
 function project_browser_install_button_form($form, &$form_state) {
+  $form['#attributes']['id'] = 'project-browser-install-button-form';
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Install',
