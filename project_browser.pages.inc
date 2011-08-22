@@ -248,7 +248,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       '#markup' => reset($releases_list),
     );
     if (isset($project_data['recommended'])) {
-      // FIXME - If there is a recommended release set, then only show it and show the jQuery link
+      // If there is a recommended release set, then only show it and show the jQuery link
       $recommended_releases = array();
       $recommended_releases[$project_data['recommended']] = $releases_list[$project_data['recommended']];
       $form['releases'][$project['name']]['release_name']['#default_value'] = $project_data['recommended'];

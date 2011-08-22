@@ -150,7 +150,7 @@ function project_browser_test_get_results($filters) {
   
   $results['total'] = count($projects);
   
-  // FIXME - Only send back the requested amount
+  // Only send back the requested amount
   $start = $filters['page'] * $filters['requested'];
   $end = $start + $filters['requested'];
   
