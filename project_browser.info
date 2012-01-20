@@ -1,5 +1,5 @@
 name = Project Browser
-description = A Project Browser that allows users to browse for and install modules and themes from their Drupal site
+description = A Project Browser that allows users to browse for and install modules and themes from their Drupal site admin area
 package = Core
 core = 7.x
 dependencies[] = update
