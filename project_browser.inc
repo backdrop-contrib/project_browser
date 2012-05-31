@@ -68,7 +68,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
 /**
  * Returns a themed sort widget for the filters
  */
-function project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction) {
+function project_browser_get_sort_widget($sort_options, $current_order_by, $current_sort) {
   $sort_list = array();
   $sort_list[] = array('data' => t('Sort by:'), 'class' => array('sort-header'));
   $current_path = drupal_get_path_alias($_GET['q']);
@@ -76,22 +76,22 @@ function project_browser_get_sort_widget($sort_options, $current_sort_method, $c
   foreach ($sort_options as $sort_option) {
     $classes = array();
     $query = array(
-      'sort_method' => $sort_option['method'],
-      'sort_direction' => $sort_option['default_sort'],
+      'order_by' => $sort_option['method'],
+      'sort' => $sort_option['default_sort'],
     );
     
     // If the sort option is currently active, handle it differently
-    if ($current_sort_method == $sort_option['method']) {
+    if ($current_order_by == $sort_option['method']) {
       $classes[] = 'sort-active';
-      $classes[] = 'sort-' . $current_sort_direction;
+      $classes[] = 'sort-' . $current_sort;
       
       // Set the direction of the sort link to the opposite of what it currently is
-      if ($current_sort_direction == $query['sort_direction']) {
-        if ($query['sort_direction'] == 'desc') {
-          $query['sort_direction'] = 'asc';
+      if ($current_sort == $query['sort']) {
+        if ($query['sort'] == 'desc') {
+          $query['sort'] = 'asc';
         }
         else {
-          $query['sort_direction'] = 'desc';
+          $query['sort'] = 'desc';
         }
       }
     }
@@ -211,14 +211,12 @@ function project_browser_get_categories($type) {
   $categories_raw = project_browser_fetch_categories($type, $use_server);
 
   if (is_array($categories_raw) AND !empty($categories_raw)) {
-    foreach ($categories_raw as $url => $modules) {
-      foreach ($modules as $module => $cats) {
-        foreach ($cats as $key => $value) {
-          // Create a new key so that there are no duplicate categories from different sites
-          $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
-          $categories[$new_key] = $value;
-        }
-      }
+    foreach ($categories_raw as $url => $cats) {
+	    foreach ($cats as $key => $value) {
+	      // Create a new key so that there are no duplicate categories from different sites
+	      $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
+	      $categories[$new_key] = $value;
+	    }
     }
   }
   
@@ -392,7 +390,7 @@ function project_browser_get_queued_releases() {
  * 
  * $filters should be an associative array with the following keys:
  * array(
- *   'drupal_version' => '7', // The Major Version of Drupal that is running on the Client
+ *   'version' => '7', // The Major Version of Drupal that is running on the Client
  *   'text' => 'views', // The text that was entered as the search query, or '' if none
  *   'categories' => array() // The categories that were selected, if any
  *   'type' => 'module', // The type of project being searched
@@ -484,7 +482,8 @@ function project_browser_fetch_results($filters) {
       if (isset($local_filters['categories'])) {
         $local_filters['categories'] = serialize($local_filters['categories']);
       }
-      $response = drupal_http_request($url . '?' . http_build_query($local_filters, FALSE, '&'));
+	  
+      $response = drupal_http_request($url . '/query/' . $local_filters['type'] . '/7?' . http_build_query($local_filters, FALSE, '&'));
       if ($response->code == '200') {
         $results_raw = drupal_json_decode($response->data);
       }
@@ -555,7 +554,7 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
           'method' => 'categories',
           'type' => $type,
         );
-        $response = drupal_http_request($url . '?' . http_build_query($params, FALSE, '&'));
+        $response = drupal_http_request($url . '/categories/' . $type . '?' . http_build_query($params, FALSE, '&'));
         if ($response->code == '200') {
           $categories_raw = drupal_json_decode($response->data);
         }

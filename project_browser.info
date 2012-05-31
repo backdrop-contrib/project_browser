@@ -4,3 +4,9 @@ package = Core
 core = 7.x
 dependencies[] = update
 files[] = project_browser.test
+; Information added by drupal.org packaging script on 2012-01-20
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "project_browser"
+datestamp = "1327063068"
+
