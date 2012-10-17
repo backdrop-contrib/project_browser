@@ -34,7 +34,7 @@ function project_browser_install_button_form($form, &$form_state) {
 function project_browser_filters_form($form, &$form_state, $type) {
   $form['search_text'] = array(
     '#type' => 'textfield',
-    '#size' => '30',
+    '#size' => '25',
     '#title' => t('Search String'),
     '#default_value' => isset($_SESSION['project_browser_text_filter_' . $type]) ? $_SESSION['project_browser_text_filter_' . $type] : '',
   );
@@ -68,7 +68,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
 /**
  * Returns a themed sort widget for the filters
  */
-function project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction) {
+function project_browser_get_sort_widget($sort_options, $current_order_by, $current_sort) {
   $sort_list = array();
   $sort_list[] = array('data' => t('Sort by:'), 'class' => array('sort-header'));
   $current_path = drupal_get_path_alias($_GET['q']);
@@ -76,22 +76,22 @@ function project_browser_get_sort_widget($sort_options, $current_sort_method, $c
   foreach ($sort_options as $sort_option) {
     $classes = array();
     $query = array(
-      'sort_method' => $sort_option['method'],
-      'sort_direction' => $sort_option['default_sort'],
+      'order_by' => $sort_option['method'],
+      'sort' => $sort_option['default_sort'],
     );
     
     // If the sort option is currently active, handle it differently
-    if ($current_sort_method == $sort_option['method']) {
+    if ($current_order_by == $sort_option['method']) {
       $classes[] = 'sort-active';
-      $classes[] = 'sort-' . $current_sort_direction;
+      $classes[] = 'sort-' . $current_sort;
       
       // Set the direction of the sort link to the opposite of what it currently is
-      if ($current_sort_direction == $query['sort_direction']) {
-        if ($query['sort_direction'] == 'desc') {
-          $query['sort_direction'] = 'asc';
+      if ($current_sort == $query['sort']) {
+        if ($query['sort'] == 'desc') {
+          $query['sort'] = 'asc';
         }
         else {
-          $query['sort_direction'] = 'desc';
+          $query['sort'] = 'desc';
         }
       }
     }
@@ -158,6 +158,7 @@ function project_browser_get_server_widget($servers, $current_server) {
  */
 function project_browser_get_sort_options($full = FALSE) {
   $sort_options = array(
+  	'score' => array('method' => 'score', 'name' => t('Relevancy'), 'default_sort' => 'desc'),
     'usage' => array('method' => 'usage', 'name' => t('Most installed'), 'default_sort' => 'desc'),
     'title' => array('method' => 'title', 'name' => t('Title'), 'default_sort' => 'asc'),
     'name' => array('method' => 'name', 'name' => t('Author'), 'default_sort' => 'asc'),
@@ -165,8 +166,7 @@ function project_browser_get_sort_options($full = FALSE) {
   );
   
   if ($full) {
-    $sort_options['score'] = array('method' => 'score', 'name' => t('Relevancy'), 'default_sort' => 'desc');
-    $sort_options['type'] = array('method' => 'type', 'name' => t('Type'), 'default_sort' => 'asc');
+  	$sort_options['type'] = array('method' => 'type', 'name' => t('Type'), 'default_sort' => 'asc');
     $sort_options['created'] = array('method' => 'created', 'name' => t('Date created'), 'default_sort' => 'asc');
     $sort_options['latest_activity'] = array('method' => 'latest_activity', 'name' => t('Latest build'), 'default_sort' => 'desc');
   }
@@ -211,14 +211,12 @@ function project_browser_get_categories($type) {
   $categories_raw = project_browser_fetch_categories($type, $use_server);
 
   if (is_array($categories_raw) AND !empty($categories_raw)) {
-    foreach ($categories_raw as $url => $modules) {
-      foreach ($modules as $module => $cats) {
-        foreach ($cats as $key => $value) {
-          // Create a new key so that there are no duplicate categories from different sites
-          $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
-          $categories[$new_key] = $value;
-        }
-      }
+    foreach ($categories_raw as $url => $cats) {
+	    foreach ($cats as $key => $value) {
+	      // Create a new key so that there are no duplicate categories from different sites
+	      $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
+	      $categories[$new_key] = $value;
+	    }
     }
   }
   
@@ -362,8 +360,10 @@ function project_browser_install_queue_add($project) {
 /**
  * Removes a project from the install queue
  */
-function project_browser_install_queue_remove($project) {
-  unset($_SESSION['project_browser_install_list'][$project['name']]);
+function project_browser_install_queue_remove($project_name) {
+	if (isset($_SESSION['project_browser_install_list'][$project_name])) {
+  	unset($_SESSION['project_browser_install_list'][$project_name]);
+	}
 }
 
 /**
@@ -392,7 +392,7 @@ function project_browser_get_queued_releases() {
  * 
  * $filters should be an associative array with the following keys:
  * array(
- *   'drupal_version' => '7', // The Major Version of Drupal that is running on the Client
+ *   'version' => '7', // The Major Version of Drupal that is running on the Client
  *   'text' => 'views', // The text that was entered as the search query, or '' if none
  *   'categories' => array() // The categories that were selected, if any
  *   'type' => 'module', // The type of project being searched
@@ -484,7 +484,8 @@ function project_browser_fetch_results($filters) {
       if (isset($local_filters['categories'])) {
         $local_filters['categories'] = serialize($local_filters['categories']);
       }
-      $response = drupal_http_request($url . '?' . http_build_query($local_filters, FALSE, '&'));
+	  
+      $response = drupal_http_request($url . '/query/' . $local_filters['type'] . '/7?' . http_build_query($local_filters, FALSE, '&'));
       if ($response->code == '200') {
         $results_raw = drupal_json_decode($response->data);
       }
@@ -555,7 +556,7 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
           'method' => 'categories',
           'type' => $type,
         );
-        $response = drupal_http_request($url . '?' . http_build_query($params, FALSE, '&'));
+        $response = drupal_http_request($url . '/categories/' . $type . '?' . http_build_query($params, FALSE, '&'));
         if ($response->code == '200') {
           $categories_raw = drupal_json_decode($response->data);
         }
@@ -826,9 +827,6 @@ function _project_browser_batch_install_releases_finished($success, $results, $o
   unset($_SESSION['project_browser_install_releases_list']);
   if ($success) {
     if (!empty($results)) {
-      if (!empty($results['successes'])) {
-        drupal_set_message(format_plural(count($results['successes']), 'One project installed.', '@count projects installed.'));
-      }
       if (!empty($results['failures'])) {
         drupal_set_message(format_plural(count($results['failures']), 'Failed to install one project.', 'Failed to install @count projects.'), 'error');
       }
@@ -838,6 +836,46 @@ function _project_browser_batch_install_releases_finished($success, $results, $o
     drupal_set_message(t('Error installing projects.'), 'error');
     drupal_goto('admin/modules/project-browser/install/select_versions');
   }
+	
+	$projects = project_browser_get_installed_projects();
+	$missing = project_browser_get_missing_dependencies($projects);
+	// If there are missing dependencies, go to install dependencies
+	if (count($missing) > 0) {
+		drupal_goto('admin/modules/project-browser/install/install_dependencies');
+	}
+	else {
+  	drupal_goto('admin/modules/project-browser/install/enable');
+  }
+}
 
-  drupal_goto('admin/modules/project-browser/install/enable');
+/**
+ * Gets the dependencies for installed projects
+ */
+function project_browser_get_missing_dependencies($projects) {
+	$modules = system_rebuild_module_data();
+	
+	$missing = array();
+  
+  foreach ($projects as $project) {
+    if ($project['type'] == 'module') {
+      $dependency_check = TRUE;
+      $dependencies = array();
+      if (isset($modules[$project['name']])) {
+        foreach ($modules[$project['name']]->info['dependencies'] as $dependency) {
+          if (!isset($modules[$dependency])) {
+            $dependencies[] = $dependency;
+          }
+        }
+        if (count($dependencies) > 0) {
+          $missing[$project['name']] = $dependencies;
+        }
+      }
+      else {
+        drupal_set_message(t('There was an error getting information for @module',
+          array('@module' => $project['name'])), 'error');
+      }
+    }
+  }
+	
+	return $missing;
 }

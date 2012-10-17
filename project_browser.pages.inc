@@ -25,17 +25,17 @@ function project_browser_page($type) {
   if (isset($_GET['repository'])) {
     $_SESSION['project_browser_sever_filter'] = $_GET['repository'];
   }
-  if (isset($_GET['sort_method'])) {
-    $_SESSION['project_browser_sort_method_filter_' . $type] = $_GET['sort_method'];
+  if (isset($_GET['order_by'])) {
+    $_SESSION['project_browser_order_by_filter_' . $type] = $_GET['order_by'];
   }
-  if (isset($_GET['sort_direction'])) {
-    $_SESSION['project_browser_sort_direction_filter_' . $type] = $_GET['sort_direction'];
+  if (isset($_GET['sort'])) {
+    $_SESSION['project_browser_sort_filter_' . $type] = $_GET['sort'];
   }
   
   // Build the filters
   $drupal_version = explode('.', DRUPAL_CORE_COMPATIBILITY);
   $filters = array(
-    'drupal_version' => $drupal_version[0],
+    'version' => $drupal_version[0],
     'type' => $type,
   );
   
@@ -49,11 +49,11 @@ function project_browser_page($type) {
   if (isset($_SESSION['project_browser_text_filter_' . $type])) {
     $filters['text'] = $_SESSION['project_browser_text_filter_' . $type];
   }
-  if (isset($_SESSION['project_browser_sort_method_filter_' . $type])) {
-    $filters['sort_method'] = $_SESSION['project_browser_sort_method_filter_' . $type];
+  if (isset($_SESSION['project_browser_order_by_filter_' . $type])) {
+    $filters['order_by'] = $_SESSION['project_browser_order_by_filter_' . $type];
   }
-  if (isset($_SESSION['project_browser_sort_direction_filter_' . $type])) {
-    $filters['sort_direction'] = $_SESSION['project_browser_sort_direction_filter_' . $type];
+  if (isset($_SESSION['project_browser_sort_filter_' . $type])) {
+    $filters['sort'] = $_SESSION['project_browser_sort_filter_' . $type];
   }
   if (isset($_SESSION['project_browser_server_filter'])) {
     $filters['server'] = $_SESSION['project_browser_server_filter'];
@@ -89,8 +89,8 @@ function project_browser_page($type) {
   }
   
   $sort_options = project_browser_get_sort_options();
-  $current_sort_method = isset($_SESSION['project_browser_sort_method_filter_' . $type]) ? $_SESSION['project_browser_sort_method_filter_' . $type] : 'score';
-  $current_sort_direction = isset($_SESSION['project_browser_sort_direction_filter_' . $type]) ? $_SESSION['project_browser_sort_direction_filter_' . $type] : 'desc';;
+  $current_order_by = isset($_SESSION['project_browser_order_by_filter_' . $type]) ? $_SESSION['project_browser_order_by_filter_' . $type] : 'score';
+  $current_sort = isset($_SESSION['project_browser_sort_filter_' . $type]) ? $_SESSION['project_browser_sort_filter_' . $type] : 'desc';;
   
   $build = array();
   $build['content'] = array(
@@ -102,7 +102,7 @@ function project_browser_page($type) {
     'project_browser_sort_header' => array(
       '#type' => 'item',
       '#weight' => 2,
-      '#markup' => project_browser_get_sort_widget($sort_options, $current_sort_method, $current_sort_direction),
+      '#markup' => project_browser_get_sort_widget($sort_options, $current_order_by, $current_sort),
     ),
     'project_browser_list' => array(
       '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
@@ -145,6 +145,10 @@ function project_browser_installation_page($op) {
       drupal_set_title(t("Select versions"));
       $content = project_browser_installation_select_versions_page();
       break;
+		case 'install_dependencies':
+      drupal_set_title(t("Install Dependencies"));
+      $content = project_browser_installation_install_dependencies_page();
+      break;
     case 'enable':
       drupal_set_title(t("Enable modules"));
       $content = project_browser_installation_enable_page();
@@ -163,6 +167,7 @@ function project_browser_installation_select_versions_page() {
   module_load_include('inc', 'project_browser', 'project_browser');
   // Show a form that lets the user select which version of the projects to install
   $queued_projects = project_browser_get_queued_projects();
+	unset($_SESSION['project_browser_installed_projects']);
   
   return drupal_get_form('project_browser_installation_select_versions_form', $queued_projects);
 }
@@ -181,7 +186,6 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   
   // First unset any old data
   unset($_SESSION['project_browser_install_releases_list']);
-  unset($_SESSION['project_browser_installed_projects']);
   
   $form['#tree'] = TRUE;
   
@@ -194,7 +198,14 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   
   foreach ($projects as $project) {
     // Get the available releases for this project
-    $release_data = project_browser_get_project_release_data($project);
+    if (!$release_data = project_browser_get_project_release_data($project)) {
+    	drupal_set_message(t('Could not fetch releases for project %project.',
+	      array('%project' => $project['title'])), 'warning');
+    	watchdog('project_browser', 'Could not fetch releases for project %project.',
+	      array('%project' => $project['title']), WATCHDOG_ERROR);
+			project_browser_install_queue_remove($project['name']);
+			continue;
+		}
     
     // We use the update module to calculate the recommended version
     $project_data = array(
@@ -260,6 +271,12 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
     }
   }
 
+	// If there is nothing to install, go to the enable page
+	if (empty($form['releases'])) {
+		drupal_set_message(t('No releases data found for any of the selected projects.'), 'warning');
+		drupal_goto('admin/modules/project-browser/install/enable');
+	}
+	
   $form['backup_warning'] = array(
     '#type' => 'markup',
     '#markup' => t('Back up your database and site before you continue. !link.',
@@ -320,6 +337,36 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
 }
 
 /**
+ * Task page for the Install Dependencies installation task
+ * 
+ * Show a form which lets the user select which version of dependencies to install
+ */
+function project_browser_installation_install_dependencies_page() {
+  module_load_include('inc', 'project_browser', 'project_browser');
+  $projects = project_browser_get_installed_projects();
+	$missing = project_browser_get_missing_dependencies($projects);
+  
+	if (count($missing) > 0) {
+		$missing_projects = array();
+	  // Add the project data in the array as best we can
+	  foreach ($missing as $project_shortname => $dependencies) {
+	  	foreach ($dependencies as $shortname) {
+	  		$missing_projects[$shortname] = array(
+					'name' => $shortname,
+					'type' => 'module', // FIXME
+					'title' => $shortname,
+				);
+	  	}
+	  }
+	  
+	  return drupal_get_form('project_browser_installation_select_versions_form', $missing_projects);
+  }
+	else {
+		drupal_goto('admin/modules/project-browser/install/enable');
+	}
+}
+
+/**
  * Task page for the Enable projects installation task
  * 
  * Show a form which lets the user enable the newly installed projects
@@ -327,8 +374,13 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
 function project_browser_installation_enable_page() {
   module_load_include('inc', 'project_browser', 'project_browser');
   $installed_projects = project_browser_get_installed_projects();
-  
-  return drupal_get_form('project_browser_installation_enable_form', $installed_projects);
+	
+	if (count($installed_projects) > 0) {
+  	return drupal_get_form('project_browser_installation_enable_form', $installed_projects);
+	}
+	else {
+		drupal_goto('admin/modules/project-browser');
+	}
 }
 
 /**
@@ -339,7 +391,6 @@ function project_browser_installation_enable_page() {
  */
 function project_browser_installation_enable_form($form, &$form_state, $projects) {
   $modules = system_rebuild_module_data();
-  
   $form['instructions'] = array(
     '#type' => 'item',
     '#markup' => t('The projects you selected have been successfully installed. 
@@ -457,6 +508,7 @@ function project_browser_installation_task_list($active = NULL) {
   // Default list of tasks.
   $tasks = array(
     'select_versions' => t('Select versions'),
+    'install_dependencies' => t('Install Dependencies'),
     'enable' => t('Enable projects'),
   );
   
