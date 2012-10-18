@@ -61,7 +61,7 @@ function project_browser_page($type) {
   else {
     $filters['server'] = 0;
   }
-  $filters['requested'] = 12;
+  $filters['requested'] = 10;
   $filters['page'] = isset($_GET['page']) ? $_GET['page'] : 0;
   
   // Get the projects to display here based on the filters
@@ -79,7 +79,7 @@ function project_browser_page($type) {
   
   // Add the pager
   $total = $results['total'];
-  $num_per_page = 12;
+  $num_per_page = 10;
   $page = pager_default_initialize($total, $num_per_page);
   $offset = $num_per_page * $page;
   $start = ($total) ? $offset + 1 : 0;
@@ -483,15 +483,18 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
  */
 function project_browser_installation_enable_form_submit($form, &$form_state) {
   $enable_queue = array_filter($form_state['values']['modules']);
-  // Enable these all at once?
-  // module_enable($enable_queue);
+  // Enable these all at once so that dependencies are handled properly
+  module_enable($enable_queue);
   
+	/*
   // Enable the modules one by one
   foreach ($enable_queue as $project_name) {
     if (!module_enable(array($project_name))) {
       drupal_set_message(t('Error installing a module: @module', array('@module' => $project_name)), 'error');
     }
   }
+	*/
+	drupal_flush_all_caches();
   
   drupal_goto('admin/modules');
 }

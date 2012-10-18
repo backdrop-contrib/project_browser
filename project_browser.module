@@ -8,7 +8,6 @@
  * admin pages, and install them.
  * 
  * TODO - Add a context to pages showing the filters currently used
- * TODO - Make the error reporting more robust
  * TODO - Create a test for the get releases HTML page
  */
 
@@ -387,7 +386,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
     // $extras[] = check_plain($project['development status']);
   }
   if ($project['usage'] AND is_numeric($project['usage'])) {
-    $extras[] = format_plural($project['usage'], '1 Download', '@count Downloads');
+    $extras[] = format_plural($project['usage'], '1 Install', '@count Installs');
   }
   if ($project['rating']) {
     $extras[] = check_plain($project['rating']);
