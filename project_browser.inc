@@ -240,21 +240,14 @@ function project_browser_prepare_categories($raw_cats, $type) {
   $categories = project_browser_fetch_categories($type);
   
   // Set the value of the categories to true if it is selected
-  foreach ($categories as $url => $modules) {
-    foreach ($modules as $module => $cats) {
-      foreach ($cats as $key => $value) {
-        $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
-        if (isset($raw_cats[$new_key]) AND $raw_cats[$new_key]) {
-          $categories[$url][$module][$key] = TRUE;
-        }
-        else {
-          unset($categories[$url][$module][$key]);
-        }
+  foreach ($categories as $url => $cats) {
+    foreach ($cats as $key => $value) {
+      $new_key = preg_replace('/[^a-z0-9_]+/', '_', strtolower($value));
+      if (isset($raw_cats[$new_key]) AND $raw_cats[$new_key]) {
+        $categories[$url][$key] = TRUE;
       }
-      
-      // Unset the parent if there are no children
-      if (empty($categories[$url][$module])) {
-        unset($categories[$url][$module]);
+      else {
+        unset($categories[$url][$key]);
       }
     }
     
@@ -484,8 +477,9 @@ function project_browser_fetch_results($filters) {
       if (isset($local_filters['categories'])) {
         $local_filters['categories'] = serialize($local_filters['categories']);
       }
-	  
-      $response = drupal_http_request($url . '/query/' . $local_filters['type'] . '/7?' . http_build_query($local_filters, FALSE, '&'));
+			
+			$query_url = $url . '/query/' . $local_filters['type'] . '/7?' . http_build_query($local_filters, FALSE, '&');
+      $response = drupal_http_request($query_url);
       if ($response->code == '200') {
         $results_raw = drupal_json_decode($response->data);
       }
@@ -589,7 +583,7 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
 function project_browser_get_servers($use_server = 'all') {
   // FIXME - Change the link once drupal.org is ready
   $servers = variable_get('project_browser_default_server', array(
-    'http://drupal:drupal@wildkatana-drupal.redesign.devdrupal.org/project_browser/server' => array(
+    'http://drupal:drupal@pbs-drupal_7.redesign.devdrupal.org/project_browser/server' => array(
       'name' => 'Drupal.org',
       'method' => 'json',
     ),
