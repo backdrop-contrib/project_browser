@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Project Browser module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function project_browser_install() {
+  $config = config('project_browser.settings');
+  $config->set('project_browser_servers', '');
+  $config->set('project_browser_default_server', array('http://www.moneyscripts.net/project_browser/server' => array(
+      'name' => 'Backdrop',
+      'method' => 'json',
+    ),
+  ));
+  $config->save();
+}

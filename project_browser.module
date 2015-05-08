@@ -19,7 +19,7 @@ function project_browser_help($path, $arg) {
   $output = '';
   switch ($path) {
     case "admin/help#project_browser":
-      $output .= '<p>' . t("Provides a UI for users to browse for and install new modules and themes from within their Drupal admin interface.") . '</p>';
+      $output .= '<p>' . t("Provides a UI for users to browse for and install new modules and themes from within their Backdrop admin interface.") . '</p>';
       break;
   }
   return $output;
@@ -46,7 +46,7 @@ function project_browser_menu() {
   $items['admin/config/development/project_browser'] = array(
     'title' => 'Project Browser settings',
     'description' => 'Add new repositories and set other settings for Project Browser.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('project_browser_admin'),
     'access arguments' => array('access administration pages'),
     'file' => 'project_browser.admin.inc',
@@ -114,7 +114,7 @@ function project_browser_install_queue_callback($method, $op, $project_name) {
 		    project_browser_install_queue_add($project);
 		  }
 		  else {
-		    drupal_set_message(t('Error: The project was not found.'), 'error');
+		    backdrop_set_message(t('Error: The project was not found.'), 'error');
 		  }
       break;
 
@@ -128,7 +128,7 @@ function project_browser_install_queue_callback($method, $op, $project_name) {
       // Redirect to the page it came from.
       $redirect = (isset($_GET['destination'])) ? $_GET['destination'] : 'admin/modules/project-browser';
 
-      drupal_goto($redirect);
+      backdrop_goto($redirect);
       break;
 
     case 'ajax':
@@ -269,11 +269,11 @@ function project_browser_preprocess_project_browser_install_queue(&$variables) {
         '#suffix' => "</div>",
       );
     }
-    $build['install-link'] = drupal_get_form('project_browser_install_button_form');
+    $build['install-link'] = backdrop_get_form('project_browser_install_button_form');
   }
 
   // Add the install button.
-  $variables['queue_html'] = drupal_render($build);
+  $variables['queue_html'] = backdrop_render($build);
 }
 
 /**
@@ -296,7 +296,7 @@ function project_browser_preprocess_project_browser_block(&$variables) {
  */
 function project_browser_preprocess_project_browser_list(&$variables) {
   module_load_include('inc', 'project_browser', 'project_browser');
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css');
+  backdrop_add_css(backdrop_get_path('module', 'project_browser') . '/css/project_browser.css');
 
   if (is_array($variables['projects_list']) AND !empty($variables['projects_list'])) {
     $content = '';
@@ -340,7 +340,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
   $filters['project_browser_filters_block'] = array(
     '#theme' => 'project_browser_block',
     'title' => t('Filters'),
-    'content' => drupal_render(drupal_get_form('project_browser_filters_form', $variables['type'])),
+    'content' => backdrop_render(backdrop_get_form('project_browser_filters_form', $variables['type'])),
   );
   $variables['filters'] = render($filters);
 
@@ -394,7 +394,7 @@ function project_browser_preprocess_project_browser_project(&$variables) {
     $variables['status'] = '<div class="install-disabled">Already installed</div>';
     $variables['install'] = '';
   }
-  elseif (drupal_get_filename($project['type'], $project['name'])) {
+  elseif (backdrop_get_filename($project['type'], $project['name'])) {
     $variables['status'] = '<div class="install-disabled">Already downloaded</div>';
     $variables['install'] = '';
   }
@@ -419,7 +419,7 @@ function project_browser_add_remove_queue_link($project_name, $title = NULL, $id
     '#title' => $title,
     '#href' => 'admin/project-browser/nojs/install-queue/' . $op . '/'. $project_name,
     '#options' => array(
-      'query' => drupal_get_destination(),
+      'query' => backdrop_get_destination(),
     ),
     '#id' => $id_prefix . '-' . $project_name,
     '#ajax' => array(
@@ -432,7 +432,7 @@ function project_browser_add_remove_queue_link($project_name, $title = NULL, $id
     ),
   );
 
-  return drupal_render($build);
+  return backdrop_render($build);
 }
 
 /**
@@ -447,10 +447,10 @@ function project_browser_library() {
     'website' => 'http://example.com/library-1',
     'version' => '1.10a',
     'js' => array(
-      drupal_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js' => array(),
+      backdrop_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js' => array(),
     ),
     'css' => array(
-      drupal_get_path('module', 'project_browser') . '/css/jquery.multiselect.css' => array(
+      backdrop_get_path('module', 'project_browser') . '/css/jquery.multiselect.css' => array(
         'type' => 'file',
         'media' => 'screen',
       ),

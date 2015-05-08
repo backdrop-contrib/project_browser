@@ -21,9 +21,9 @@ function project_browser_admin() {
   $form['main']['project_browser_servers'] = array(
     '#type' => 'textarea',
     '#title' => t('Repositories'),
-    '#default_value' => variable_get('project_browser_servers', ''),
+    '#default_value' => config_get('project_browser.settings', 'project_browser_servers'),
     '#description' => t("Add new repositories to use for the Project Browser, one per line, in 
-      the 'url|method|Site Name' format. Drupal.org is added by default, and doesn't need to be 
+      the 'url|method|Site Name' format. <MAINSITE_URL> is added by default, and doesn't need to be 
       set here."),
     '#required' => FALSE,
   );

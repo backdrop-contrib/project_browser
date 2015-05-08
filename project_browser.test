@@ -2,7 +2,7 @@
 /**
 * Administration tests for Project Browser.
 */
-class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
+class ProjectBrowserAdministrationTestCase extends BackdropWebTestCase {
   protected $privileged_user;
 
   /**
@@ -21,25 +21,20 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
 
     // Set the default server variable
     $server_url = url('project_browser_test/query', array('absolute' => TRUE));
-    variable_set('project_browser_default_server', array(
-      $server_url => array(
-        'name' => 'Test Server',
-        'method' => 'json',
-      ),
-    ));
+    config_set('project_browser.settings', 'project_browser_default_server');
 
     // Create and log in our privileged user.
-    $this->privileged_user = $this->drupalCreateUser(array(
+    $this->privileged_user = $this->backdropCreateUser(array(
       'use project browser',
     ));
-    $this->drupalLogin($this->privileged_user);
+    $this->backdropLogin($this->privileged_user);
   }
 
   public function testProjectBrowserSearchViews() {
     // Create node to edit.
     $edit = array();
     $edit['search_text'] = 'views';
-    $this->drupalPost('admin/modules/project-browser/modules', $edit, t('Filter'));
+    $this->backdropPost('admin/modules/project-browser/modules', $edit, t('Filter'));
     $this->assertText('Showing 1 to');
   }
 
@@ -47,7 +42,7 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
     // Attempt to fetch the default projects
     $edit = array();
     $edit['search_text'] = '';
-    $this->drupalPost('admin/modules/project-browser/modules', $edit, t('Filter'));
+    $this->backdropPost('admin/modules/project-browser/modules', $edit, t('Filter'));
     $this->assertText('Showing 1 to');
   }
 
@@ -59,15 +54,15 @@ class ProjectBrowserAdministrationTestCase extends DrupalWebTestCase {
 
   public function testProjectBrowserAddRemoveQueue() {
     // Refresh the page
-    $this->drupalGet('admin/modules/project-browser/modules');
+    $this->backdropGet('admin/modules/project-browser/modules');
 
     // Simulate adding a project to the install queue
-    $this->drupalGet('admin/project-browser/nojs/install-queue/add/views', array('query' => array('destination' => 'admin/modules/project-browser')));
+    $this->backdropGet('admin/project-browser/nojs/install-queue/add/views', array('query' => array('destination' => 'admin/modules/project-browser')));
     $this->assertNoText('Install queue is empty.');
     $this->assertNoText('Error: The project was not found.');
 
     // Simulate removing a project from the install queue
-    $this->drupalGet('admin/project-browser/nojs/install-queue/remove/views', array('query' => array('destination' => 'admin/modules/project-browser')));
+    $this->backdropGet('admin/project-browser/nojs/install-queue/remove/views', array('query' => array('destination' => 'admin/modules/project-browser')));
     $this->assertText('Install queue is empty.');
     $this->assertNoText('Error: The project was not found.');
   }

@@ -12,7 +12,7 @@ function project_browser_get_install_list() {
     '#theme' => 'project_browser_install_queue',
     '#projects' => project_browser_get_queued_projects(),
   );
-  return drupal_render($build);
+  return backdrop_render($build);
 }
 
 /**
@@ -72,7 +72,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
 function project_browser_get_sort_widget($sort_options, $current_order_by, $current_sort) {
   $sort_list = array();
   $sort_list[] = array('data' => t('Sort by:'), 'class' => array('sort-header'));
-  $current_path = drupal_get_path_alias($_GET['q']);
+  $current_path = backdrop_get_path_alias($_GET['q']);
 
   foreach ($sort_options as $sort_option) {
     $classes = array();
@@ -119,7 +119,7 @@ function project_browser_get_sort_widget($sort_options, $current_order_by, $curr
 function project_browser_get_server_widget($servers, $current_server) {
   $list = array();
   $list[] = array('data' => t('Repository:'), 'class' => array('server-header'));
-  $current_path = drupal_get_path_alias($_GET['q']);
+  $current_path = backdrop_get_path_alias($_GET['q']);
 
   $i = 0;
 
@@ -385,7 +385,7 @@ function project_browser_get_queued_releases() {
  *
  * $filters should be an associative array with the following keys:
  * array(
- *   'version' => '7', // The Major Version of Drupal that is running on the Client
+ *   'version' => '7', // The Major Version of Backdrop that is running on the Client
  *   'text' => 'views', // The text that was entered as the search query, or '' if none
  *   'categories' => array() // The categories that were selected, if any
  *   'type' => 'module', // The type of project being searched
@@ -406,8 +406,8 @@ function project_browser_get_queued_releases() {
  *       'description' => "Long project description ...",
  *       'image' => 'http://www.example.com/image.jpg', // Absolute url to the image, if any
  *       'usage' => '542312', // How many Downloads the module has had
- *       'project url' => 'http://www.drupal.org/projects/views', // Absolute url to the project page, if any
- *       'project status url' => 'http://updates.drupal.org/release-history/views/7.x', // The absolute url of the update checker, formatted like how Drupal.org Update Status does it
+ *       'project url' => 'http://www.<MAINSITE_URL>/projects/views', // Absolute url to the project page, if any
+ *       'project status url' => 'http://updates.<MAINSITE_URL>/release-history/views/7.x', // The absolute url of the update checker, formatted like how <MAINSITE_URL> Update Status does it
  *       'last updated' => '12342523', // UNIX Timestamp of when the project was last updated
  *       'maintenance status' => 'Actively maintained', // Maintenance status
  *       'development status' => 'Under active development', // Development status
@@ -467,7 +467,7 @@ function project_browser_fetch_results($filters) {
 
       // Check for errors.
       if ($error = xmlrpc_error() AND $error->is_error) {
-        drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
+        backdrop_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
           array('@name' => $server['name'], '@code' => $error->code, '@message' => $error->message)));
         continue;
       }
@@ -481,12 +481,12 @@ function project_browser_fetch_results($filters) {
       }
 
 			$query_url = $url . '/query/' . $local_filters['type'] . '/7?' . http_build_query($local_filters, FALSE, '&');
-      $response = drupal_http_request($query_url);
+      $response = backdrop_http_request($query_url);
       if ($response->code == '200') {
-        $results_raw = drupal_json_decode($response->data);
+        $results_raw = backdrop_json_decode($response->data);
       }
       else {
-        drupal_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
+        backdrop_set_message(t("Encountered an error when trying to fetch results from @name. Error @code : @message",
           array('@name' => $server['name'], '@code' => $response->code, '@message' => $response->error)));
         continue;
       }
@@ -540,7 +540,7 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
 
         // Check for errors.
         if ($error = xmlrpc_error() AND $error->is_error) {
-          drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
+          backdrop_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
             array('@name' => $server['name'], '@code' => $error->code, '@message' => $error->message)));
           continue;
         }
@@ -552,12 +552,12 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
           'method' => 'categories',
           'type' => $type,
         );
-        $response = drupal_http_request($url . '/categories/' . $type . '?' . http_build_query($params, FALSE, '&'));
+        $response = backdrop_http_request($url . '/categories/' . $type . '?' . http_build_query($params, FALSE, '&'));
         if ($response->code == '200') {
-          $categories_raw = drupal_json_decode($response->data);
+          $categories_raw = backdrop_json_decode($response->data);
         }
         else {
-          drupal_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
+          backdrop_set_message(t("Encountered an error when trying to fetch categories from @name. Error @code : @message",
             array('@name' => $server['name'], '@code' => $response->code, '@message' => $response->error)));
           continue;
         }
@@ -583,15 +583,10 @@ function project_browser_fetch_categories($type, $use_server = 'all') {
  *   project_browser_servers variable, in 'url => name' format.
  */
 function project_browser_get_servers($use_server = 'all') {
-  // FIXME - Change the link once drupal.org is ready
-  $servers = variable_get('project_browser_default_server', array(
-    'http://www.moneyscripts.net/project_browser/server' => array(
-      'name' => 'Drupal',
-      'method' => 'json',
-    ),
-  ));
+  // FIXME - Change the link once <MAINSITE_URL> is ready
+  $servers = config_get('project_browser.settings', 'project_browser_default_server');
 
-  if ($servers_raw = variable_get('project_browser_servers', '')) {
+  if ($servers_raw = config_get('project_browser.settings', 'project_browser_servers')) {
     // Process the variable and add the servers to the list.
     $custom_servers = array();
 
@@ -657,7 +652,7 @@ function project_browser_get_project_release_data($project) {
  * from modules/update/update.manager.inc
  *
  * There were no suitable functions that could be used besides
- * drupal_form_submit('update_manager_install_form', $form_state, $project['type']);
+ * backdrop_form_submit('update_manager_install_form', $form_state, $project['type']);
  * and it wouldn't work because this is being run from a Batch function.
  *
  * @todo  Ideally, this should be in the update module as a standalone function,
@@ -670,7 +665,7 @@ function project_browser_download_project($url) {
   if (!$local_cache) {
     return array(
       'success' => FALSE,
-      'message' => t('Unable to retrieve Drupal project from %url.', array('%url' => $url)),
+      'message' => t('Unable to retrieve Backdrop project from %url.', array('%url' => $url)),
     );
   }
 
@@ -699,7 +694,7 @@ function project_browser_download_project($url) {
   if (!empty($archive_errors)) {
     if (!empty($archive_errors)) {
       foreach ($archive_errors as $error) {
-        drupal_set_message(check_plain($error), 'error');
+        backdrop_set_message(check_plain($error), 'error');
       }
     }
     return array(
@@ -709,7 +704,7 @@ function project_browser_download_project($url) {
   }
 
   // Make sure the Updater registry is loaded.
-  drupal_get_updaters();
+  backdrop_get_updaters();
 
   $project_location = $directory . '/' . $project;
   try {
@@ -739,12 +734,12 @@ function project_browser_download_project($url) {
     );
   }
 
-  $project_real_location = drupal_realpath($project_location);
+  $project_real_location = backdrop_realpath($project_location);
   $updater_name = get_class($updater);
 
   if (fileowner($project_real_location) == fileowner(conf_path())) {
     module_load_include('inc', 'update', 'update.authorize');
-    $filetransfer = new FileTransferLocal(DRUPAL_ROOT);
+    $filetransfer = new FileTransferLocal(BACKDROP_ROOT);
 
     // Initialize some variables in the Batch API $context array.
     $updater = new $updater_name($project_real_location);
@@ -810,33 +805,33 @@ function _project_browser_batch_install_release($release_name, $project, &$conte
  * Shows a message and finish up the batch.
  */
 function _project_browser_batch_install_releases_finished($success, $results, $operations) {
-  drupal_get_messages();
+  backdrop_get_messages();
 
   // Restore the maintenance mode to what it was at the start.
-  variable_set('maintenance_mode', $_SESSION['maintenance_mode']);
+  state_set('maintenance_mode', $_SESSION['maintenance_mode']);
   unset($_SESSION['maintenance_mode']);
 
   unset($_SESSION['project_browser_install_releases_list']);
   if ($success) {
     if (!empty($results)) {
       if (!empty($results['failures'])) {
-        drupal_set_message(format_plural(count($results['failures']), 'Failed to install one project.', 'Failed to install @count projects.'), 'error');
+        backdrop_set_message(format_plural(count($results['failures']), 'Failed to install one project.', 'Failed to install @count projects.'), 'error');
       }
     }
   }
   else {
-    drupal_set_message(t('Error installing projects.'), 'error');
-    drupal_goto('admin/modules/project-browser/install/select_versions');
+    backdrop_set_message(t('Error installing projects.'), 'error');
+    backdrop_goto('admin/modules/project-browser/install/select_versions');
   }
 
 	$projects = project_browser_get_installed_projects();
 	$missing = project_browser_get_missing_dependencies($projects);
 	// If there are missing dependencies, go to install dependencies.
 	if (count($missing) > 0) {
-		drupal_goto('admin/modules/project-browser/install/install_dependencies');
+		backdrop_goto('admin/modules/project-browser/install/install_dependencies');
 	}
 	else {
-  	drupal_goto('admin/modules/project-browser/install/enable');
+  	backdrop_goto('admin/modules/project-browser/install/enable');
   }
 }
 
@@ -862,7 +857,7 @@ function project_browser_get_missing_dependencies($projects) {
         }
       }
       else {
-        drupal_set_message(t('There was an error getting information for @module',
+        backdrop_set_message(t('There was an error getting information for @module',
           array('@module' => $project['name'])), 'error');
       }
     }

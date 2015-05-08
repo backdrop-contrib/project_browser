@@ -15,9 +15,9 @@
  */
 function project_browser_page($type) {
   module_load_include('inc', 'project_browser', 'project_browser');
-  drupal_add_library('project_browser', 'multiselect');
-  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_more_link.js');
-  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js');
+  backdrop_add_library('project_browser', 'multiselect');
+  backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_more_link.js');
+  backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js');
 
   // Set any filters in the session that are needed.
   if (isset($_GET['repository'])) {
@@ -31,9 +31,9 @@ function project_browser_page($type) {
   }
 
   // Build the filters.
-  $drupal_version = explode('.', DRUPAL_CORE_COMPATIBILITY);
+  $backdrop_version = explode('.', BACKDROP_CORE_COMPATIBILITY);
   $filters = array(
-    'version' => $drupal_version[0],
+    'version' => $backdrop_version[0],
     'type' => $type,
   );
 
@@ -132,23 +132,23 @@ function project_browser_page($type) {
  *    Operation to preform.
  */
 function project_browser_installation_page($op) {
-  drupal_add_css(drupal_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
+  backdrop_add_css(backdrop_get_path('module', 'project_browser') . '/css/project_browser.css', array('preprocess' => FALSE));
 
   switch ($op) {
     case 'select_versions':
-      drupal_set_title(t("Select versions"));
+      backdrop_set_title(t("Select versions"));
       $content = project_browser_installation_select_versions_page();
       break;
 		case 'install_dependencies':
-      drupal_set_title(t("Install Dependencies"));
+      backdrop_set_title(t("Install Dependencies"));
       $content = project_browser_installation_install_dependencies_page();
       break;
     case 'enable':
-      drupal_set_title(t("Enable modules"));
+      backdrop_set_title(t("Enable modules"));
       $content = project_browser_installation_enable_page();
       break;
   }
-  return theme('project_browser_install', array('current_task' => $op, 'main_content' => drupal_render($content)));
+  return theme('project_browser_install', array('current_task' => $op, 'main_content' => backdrop_render($content)));
 }
 
 /**
@@ -163,7 +163,7 @@ function project_browser_installation_select_versions_page() {
   $queued_projects = project_browser_get_queued_projects();
 	unset($_SESSION['project_browser_installed_projects']);
 
-  return drupal_get_form('project_browser_installation_select_versions_form', $queued_projects);
+  return backdrop_get_form('project_browser_installation_select_versions_form', $queued_projects);
 }
 
 /**
@@ -174,7 +174,7 @@ function project_browser_installation_select_versions_page() {
  */
 function project_browser_installation_select_versions_form($form, &$form_state, $projects) {
   module_load_include('inc', 'project_browser', 'project_browser');
-  drupal_add_js(drupal_get_path('module', 'project_browser') . '/js/select_releases.js');
+  backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/select_releases.js');
 
   $form = array();
 
@@ -193,7 +193,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   foreach ($projects as $project) {
     // Get the available releases for this project.
     if (!$release_data = project_browser_get_project_release_data($project)) {
-    	drupal_set_message(t('Could not fetch releases for project %project.',
+    	backdrop_set_message(t('Could not fetch releases for project %project.',
 	      array('%project' => $project['title'])), 'warning');
     	watchdog('project_browser', 'Could not fetch releases for project %project.',
 	      array('%project' => $project['title']), WATCHDOG_ERROR);
@@ -268,14 +268,14 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
 
 	// If there is nothing to install, go to the enable page.
 	if (empty($form['releases'])) {
-		drupal_set_message(t('No releases data found for any of the selected projects.'), 'warning');
-		drupal_goto('admin/modules/project-browser/install/enable');
+		backdrop_set_message(t('No releases data found for any of the selected projects.'), 'warning');
+		backdrop_goto('admin/modules/project-browser/install/enable');
 	}
 
   $form['backup_warning'] = array(
     '#type' => 'markup',
     '#markup' => t('Back up your database and site before you continue. !link.',
-      array('!link' => l(t('Learn how'), 'http://drupal.org/node/22281'))),
+      array('!link' => l(t('Learn how'), 'http://<MAINSITE_URL>/node/22281'))),
   );
   $form['maintenance_mode'] = array(
     '#type' => 'checkbox',
@@ -297,9 +297,9 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
 function project_browser_installation_select_versions_form_submit($form, &$form_state) {
   module_load_include('inc', 'project_browser', 'project_browser');
   // Store maintenance_mode setting so we can restore it when done.
-  $_SESSION['maintenance_mode'] = variable_get('maintenance_mode', FALSE);
+  $_SESSION['maintenance_mode'] = state_get('maintenance_mode', 0);
   if ($form_state['values']['maintenance_mode'] == TRUE) {
-    variable_set('maintenance_mode', TRUE);
+    state_set('maintenance_mode', TRUE);
   }
 
   foreach ($form_state['values']['releases'] as $item) {
@@ -326,7 +326,7 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
     'init_message' => t('Installing modules...'),
     'progress_message' => t('Installed @current out of @total.'),
     'error_message' => t('Installation has encountered an error.'),
-    'file' => drupal_get_path('module', 'project_browser') . '/project_browser.inc',
+    'file' => backdrop_get_path('module', 'project_browser') . '/project_browser.inc',
   );
   batch_set($batch);
 }
@@ -356,10 +356,10 @@ function project_browser_installation_install_dependencies_page() {
 	  	}
 	  }
 
-	  return drupal_get_form('project_browser_installation_select_versions_form', $missing_projects);
+	  return backdrop_get_form('project_browser_installation_select_versions_form', $missing_projects);
   }
 	else {
-		drupal_goto('admin/modules/project-browser/install/enable');
+		backdrop_goto('admin/modules/project-browser/install/enable');
 	}
 }
 
@@ -373,10 +373,10 @@ function project_browser_installation_enable_page() {
   $installed_projects = project_browser_get_installed_projects();
 
 	if (count($installed_projects) > 0) {
-  	return drupal_get_form('project_browser_installation_enable_form', $installed_projects);
+  	return backdrop_get_form('project_browser_installation_enable_form', $installed_projects);
 	}
 	else {
-		drupal_goto('admin/modules/project-browser');
+		backdrop_goto('admin/modules/project-browser');
 	}
 }
 
@@ -428,7 +428,7 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
         }
       }
       else {
-        drupal_set_message(t('There was an error getting information for @module',
+        backdrop_set_message(t('There was an error getting information for @module',
           array('@module' => $project['name'])), 'error');
       }
     }
@@ -482,8 +482,8 @@ function project_browser_installation_enable_form_submit($form, &$form_state) {
   $enable_queue = array_filter($form_state['values']['modules']);
   // Enable these all at once so that dependencies are handled properly.
   module_enable($enable_queue);
-	drupal_flush_all_caches();
-  drupal_goto('admin/modules');
+	backdrop_flush_all_caches();
+  backdrop_goto('admin/modules');
 }
 
 /**
@@ -502,7 +502,7 @@ function project_browser_installation_task_list($active = NULL) {
     'enable' => t('Enable projects'),
   );
 
-  require_once DRUPAL_ROOT . '/includes/theme.maintenance.inc';
+  require_once BACKDROP_ROOT . '/includes/theme.maintenance.inc';
 
   return theme_task_list(array('items' => $tasks, 'active' => $active));
 }

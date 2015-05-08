@@ -1,7 +1,7 @@
 (function ($) {
   $(document).ready(function() {
     $('#edit-categories').multiselect({
-      noneSelectedText: Drupal.t("Choose"),
+      noneSelectedText: Backdrop.t("Choose"),
       selectedList: 99,
       minWidth: 500,
       position: {
