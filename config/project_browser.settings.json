@@ -1,0 +1,10 @@
+{
+ "_config_name": "project_browser.settings",
+ "project_browser_servers": "",
+ "project_browser_default_server": {
+   "http://www.moneyscripts.net/project_browser/server": {
+     "name": "Backdrop",
+     "method": "json"
+   }
+ }
+}

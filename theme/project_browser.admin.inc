@@ -28,5 +28,24 @@ function project_browser_admin() {
     '#required' => FALSE,
   );
 
-  return system_settings_form($form);
+
+  // Add a submit button
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
+
+  // Return the form!
+  return $form;
 }
+
+// Add a submit function to process config
+function project_browser_admin_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  $config = config('project_browser.settings');
+  $config->set('project_browser_servers', $form_state['values']['project_browser_servers']);
+  $config->save();
+  backdrop_set_message(t('Configuration options saved.'));
+}
+

@@ -463,3 +463,23 @@ function project_browser_library() {
   );
   return $libraries;
 }
+
+/**
+ * Implements hook_autoload_info().
+ */
+function project_browser_autoload_info(){
+ return array(
+   'ProjectBrowserAdministrationTestCase' => 'project_browser.test',
+ );
+}
+
+/**
+ * Implements hook_config_info().
+ */
+function project_browser_config_info() {
+ $prefixes['project_browser.settings'] = array(
+   'label' => t('Project Browser settings'),
+   'group' => t('Configuration'),
+ );
+ return $prefixes;
+}
