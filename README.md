@@ -18,7 +18,11 @@ complete text.
 
 Current Maintainers
 -------------------
+Ported to Backdrop by @docwilmot
 
+Also involved with project : @Graham-72 , @Drupaldise
+
+See https://github.com/backdrop/backdrop-issues/issues/870
 
 Credits
 -------
