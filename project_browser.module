@@ -283,8 +283,8 @@ function project_browser_preprocess_project_browser_install_queue(&$variables) {
  */
 function project_browser_preprocess_project_browser_block(&$variables) {
   // Add the title and content variables.
-  $variables['title'] = $variables['element']['title'];
-  $variables['content'] = $variables['element']['content'];
+  $variables['title'] = $variables['element']['#title'];
+  $variables['content'] = $variables['element']['#content'];
 }
 
 /**
@@ -325,8 +325,8 @@ function project_browser_preprocess_project_browser_list(&$variables) {
 
   $main_content['project_browser_main_block'] = array(
     '#theme' => 'project_browser_block',
-    'title' => $title,
-    'content' => $content,
+    '#title' => $title,
+    '#content' => $content,
     '#contextual_links' => array(
       'project_browser' => array('admin/config/development/project_browser', array()),
     ),
@@ -337,18 +337,19 @@ function project_browser_preprocess_project_browser_list(&$variables) {
   $variables['pager'] = theme('pager', array('tags' => NULL));
 
   // Add the filters.
+  $filter_content = backdrop_get_form('project_browser_filters_form', $variables['type']);
   $filters['project_browser_filters_block'] = array(
     '#theme' => 'project_browser_block',
-    'title' => t('Filters'),
-    'content' => backdrop_render(backdrop_get_form('project_browser_filters_form', $variables['type'])),
+    '#title' => t('Filters'),
+    '#content' => backdrop_render($filter_content),
   );
   $variables['filters'] = render($filters);
 
   // Add the install list.
   $install_list['project_browser_filters_block'] = array(
     '#theme' => 'project_browser_block',
-    'title' => t('Install queue'),
-    'content' => project_browser_get_install_list(),
+    '#title' => t('Install queue'),
+    '#content' => project_browser_get_install_list(),
   );
   $variables['install_list'] = render($install_list);
 }
