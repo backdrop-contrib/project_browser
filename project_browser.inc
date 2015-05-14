@@ -480,7 +480,7 @@ function project_browser_fetch_results($filters) {
         $local_filters['categories'] = serialize($local_filters['categories']);
       }
 
-			$query_url = $url . '/query/' . $local_filters['type'] . '/7?' . http_build_query($local_filters, FALSE, '&');
+      $query_url = $url . '/query/' . $local_filters['type'] . '/1?' . http_build_query($local_filters, FALSE, '&');
       $response = backdrop_http_request($query_url);
       if ($response->code == '200') {
         $results_raw = backdrop_json_decode($response->data);
