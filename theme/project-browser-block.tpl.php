@@ -11,7 +11,7 @@
  * @see project_browser_preprocess_project_browser_block()
  */
 ?>
-<div class="<?php print $classes; ?>">
+<div class="<?php print implode(' ', $classes); ?>">
   <?php print render($title_prefix); ?>
   <h2><?php print $title; ?></h2>
   <?php print render($title_suffix); ?>
