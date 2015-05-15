@@ -441,7 +441,7 @@ function project_browser_add_remove_queue_link($project_name, $title = NULL, $id
  *
  * This is used for the categories multiselect widget library.
  */
-function project_browser_library() {
+function project_browser_library_info() {
   // Library One.
   $libraries['multiselect'] = array(
     'title' => 'jQuery MultiSelect',
