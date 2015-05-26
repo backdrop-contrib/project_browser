@@ -208,7 +208,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
       'install_type' => '',
     );
     module_load_include('inc', 'update', 'update.compare');
-    update_calculate_project_update_status($project, $project_data, $release_data);
+    update_calculate_project_update_status($project_data, $release_data);
 
     $releases_list = array();
 
@@ -314,8 +314,7 @@ function project_browser_installation_select_versions_form_submit($form, &$form_
   module_load_include('inc', 'update', 'update.manager');
 
   $queued_releases = project_browser_get_queued_releases();
-
-  $operations = array();
+   $operations = array();
   foreach ($queued_releases as $release_name => $project) {
     $operations[] = array('_project_browser_batch_install_release', array($release_name, $project));
   }
@@ -502,7 +501,7 @@ function project_browser_installation_task_list($active = NULL) {
     'enable' => t('Enable projects'),
   );
 
-  require_once BACKDROP_ROOT . '/includes/theme.maintenance.inc';
+  require_once BACKDROP_ROOT . '/core/includes/theme.maintenance.inc';
 
   return theme_task_list(array('items' => $tasks, 'active' => $active));
 }
