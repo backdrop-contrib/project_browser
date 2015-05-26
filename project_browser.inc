@@ -430,7 +430,6 @@ function project_browser_fetch_results($filters) {
   $servers = project_browser_get_servers($filters['server']);
   // Attempt to retrieve the cached version of this page.
   $cid = md5(serialize(array_merge($filters, $servers)));
-
   if ($cache = cache_get($cid)) {
     return $cache->data;
   }
@@ -482,6 +481,7 @@ function project_browser_fetch_results($filters) {
 
       $query_url = $url . '/query/' . $local_filters['type'] . '/1?' . http_build_query($local_filters, FALSE, '&');
       $response = backdrop_http_request($query_url);
+
       if ($response->code == '200') {
         $results_raw = backdrop_json_decode($response->data);
       }
@@ -634,7 +634,6 @@ function project_browser_get_servers($use_server = 'all') {
  */
 function project_browser_get_project_release_data($project) {
   $project['project_type'] = $project['type'];
-
   // Build the releases cache for this project
   module_load_include('inc', 'update', 'update.fetch');
   if (_update_process_fetch_task($project)) {
@@ -668,7 +667,6 @@ function project_browser_download_project($url) {
       'message' => t('Unable to retrieve Backdrop project from %url.', array('%url' => $url)),
     );
   }
-
   // Try to extract it.
   $directory = _update_manager_extract_directory();
   try {
