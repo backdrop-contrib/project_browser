@@ -133,12 +133,10 @@ function project_browser_install_queue_callback($method, $op, $project_name) {
 
     case 'ajax':
       $commands = array();
-
       // Refresh the install queue.
       $commands[] = ajax_command_replace('#project-browser-install-queue', project_browser_get_install_list());
       // Refresh the add to queue link.
       $commands[] = ajax_command_replace('#add-to-queue-link-' . $project_name, project_browser_add_remove_queue_link($project_name));
-
       return array('#type' => 'ajax', '#commands' => $commands);
       break;
   }
@@ -443,9 +441,9 @@ function project_browser_add_remove_queue_link($project_name, $title = NULL, $id
 function project_browser_library_info() {
   // Library One.
   $libraries['multiselect'] = array(
-    'title' => 'jQuery MultiSelect',
-    'website' => 'http://example.com/library-1',
-    'version' => '1.10a',
+    'title' => 'jQuery UI MultiSelect Widget',
+    'website' => 'http://www.erichynds.com/blog/jquery-ui-multiselect-widget',
+    'version' => '1.13',
     'js' => array(
       backdrop_get_path('module', 'project_browser') . '/js/jquery.multiselect.min.js' => array(),
     ),
