@@ -5,8 +5,8 @@
  *
  * Authored by Leighton Whiting to improve site builder UX.
  *
- * This module provides a new UI for admins to easily browse modules and themes
- * from their admin pages, and install them.
+ * This module provides a new UI for admins to easily browse modules, themes and
+ * layouts from their admin pages, and install them.
  *
  * TODO - Add a context to pages showing the filters currently used
  * TODO - Create a test for the get releases HTML page
@@ -19,7 +19,7 @@ function project_browser_help($path, $arg) {
   $output = '';
   switch ($path) {
     case "admin/help#project_browser":
-      $output .= '<p>' . t("Provides a UI for users to browse for and install new modules and themes from within their Backdrop admin interface.") . '</p>';
+      $output .= '<p>' . t("Provides a UI for users to browse for and install new modules, themes and layouts from within their Backdrop admin interface.") . '</p>';
       break;
   }
   return $output;
@@ -32,7 +32,7 @@ function project_browser_permission() {
   return array(
     'use project browser' => array(
       'title' => t('Use Project Browser'),
-      'description' => t('This allows the user to browse for and install new modules and themes using Project Browser.'),
+      'description' => t('This allows the user to browse for and install new modules, themes and layouts using Project Browser.'),
       'restrict access' => TRUE,
     )
   );
