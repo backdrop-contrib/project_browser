@@ -8,7 +8,7 @@
  * Page to display the projects.
  *
  * @param $type
- *   Type of project to view, ie 'module' or 'theme'.
+ *   Type of project to view, ie 'module', 'theme' or 'layout'.
  *
  * @return
  *   Themed list of the projects.

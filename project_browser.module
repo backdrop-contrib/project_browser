@@ -81,6 +81,17 @@ function project_browser_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+  $items['admin/modules/project-browser/layouts'] = array(
+    'title' => 'Layouts',
+    'description' => 'Browse and search for new layouts',
+    'page callback' => 'project_browser_page',
+    'page arguments' => array('layout'),
+    'access arguments' => array('use project browser'),
+    'file' => 'project_browser.pages.inc',
+    'weight' => 10,
+    'type' => MENU_LOCAL_TASK,
+  );
+
   $items['admin/modules/project-browser/install/%'] = array(
     'title' => 'Install',
     'page callback' => 'project_browser_installation_page',
@@ -308,13 +319,16 @@ function project_browser_preprocess_project_browser_list(&$variables) {
   else {
     $content = t('No results found.');
   }
-
+dpm($variables);
   switch ($variables['type']) {
     case 'module':
       $title = t('Modules');
       break;
     case 'theme':
       $title = t('Themes');
+      break;
+    case 'layout':
+      $title = t('Layouts');
       break;
     default:
       $title = t('Projects');

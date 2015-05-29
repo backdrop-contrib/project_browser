@@ -480,6 +480,7 @@ function project_browser_fetch_results($filters) {
       }
 
       $query_url = $url . '/query/' . $local_filters['type'] . '/1?' . http_build_query($local_filters, FALSE, '&');
+      dpm($query_url);
       $response = backdrop_http_request($query_url);
 
       if ($response->code == '200') {
