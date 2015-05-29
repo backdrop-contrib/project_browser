@@ -126,6 +126,23 @@ function project_browser_page($type) {
 }
 
 /**
+ * Page to display individual projects in a modal.
+ *
+ * @param $project
+ *   The project name.
+ *
+ * @return
+ *   Render array of a themed project.
+ */
+function project_browser_project_display($project) {
+  $projects = $_SESSION['project_browser_listed_projects'];
+  $form['project_dialog'] = array(
+    '#markup' => theme('project_browser_project_dialog', array('project' => $projects[$project])),
+  );
+  return $form;
+}
+
+/**
  * Page to install projects.
  *
  * @param $op

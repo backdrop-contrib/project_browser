@@ -201,3 +201,7 @@ div.install-item-prefix {
 #project-browser div#project-browser-sidebar-right div.project-browser-block div.content {
   padding: 5px 10px;
 }
+
+.ui-dialog.project-dialog {
+  max-width:95%;
+}
