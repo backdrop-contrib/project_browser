@@ -388,10 +388,10 @@ function project_browser_installation_enable_page() {
 function project_browser_installation_enable_form($form, &$form_state, $projects) {
   $modules = system_rebuild_module_data();
   $form['instructions'] = array(
-    '#type' => 'item',
-    '#markup' => t('The projects you selected have been successfully installed.
-      If you installed any new modules, you may enable them using the form below
-      or on the main !link page.', array('!link' => l(t('Modules'), 'admin/modules'))),
+  '#type' => 'item',
+  '#markup' => t('The projects you selected have been successfully installed.
+    You may enable installed themes on the main !themes page and add new 
+    layouts on the main !layouts page. ', array('!themes' => l(t('Themes'), 'admin/appearance'), '!layouts' => l(t('Add Layout'), 'admin/structure/layouts/add')))
   );
 
   $options = array();
@@ -439,38 +439,45 @@ function project_browser_installation_enable_form($form, &$form_state, $projects
     array('data' => t('Dependencies')),
   );
 
-  if (!empty($options)) {
-    $form['modules'] = array(
-      '#type' => 'tableselect',
-      '#title' => t('Enable modules'),
-      '#description' => t('Select which modules you would like to enable.'),
-      '#header' => $headers,
-      '#options' => $options,
-      '#empty' => t('No new modules installed.'),
-      '#multiple' => TRUE,
-      '#js_select' => TRUE,
-      '#weight' => 1,
+  if(!empty($options) || !empty($missing)) {
+    $form['module_instructions'] = array(
+    '#type' => 'item',
+    '#markup' => t('You may enable modules using the form below
+      or on the main !link page.', array('!link' => l(t('Modules'), 'admin/modules'))),
     );
+    if (!empty($options)) {
+      $form['modules'] = array(
+        '#type' => 'tableselect',
+        '#title' => t('Enable modules'),
+        '#description' => t('Select which modules you would like to enable.'),
+        '#header' => $headers,
+        '#options' => $options,
+        '#empty' => t('No new modules installed.'),
+        '#multiple' => TRUE,
+        '#js_select' => TRUE,
+        '#weight' => 1,
+      );
 
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#submit' => array('project_browser_installation_enable_form_submit'),
-      '#value' => t('Enable modules'),
-      '#weight' => 99,
-    );
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#submit' => array('project_browser_installation_enable_form_submit'),
+        '#value' => t('Enable modules'),
+        '#weight' => 99,
+      );
+    }
+
+    if (!empty($missing)) {
+      $form['missing'] = array(
+        '#type' => 'item',
+        '#title' => t('Missing Dependencies'),
+        '#description' => t('These modules are missing one or more dependencies,
+          and so cannot be enabled.'),
+        '#markup' => theme('table', array('header' => $headers, 'rows' => $missing)),
+        '#weight' => 2,
+      );
+    }
   }
-
-  if (!empty($missing)) {
-    $form['missing'] = array(
-      '#type' => 'item',
-      '#title' => t('Missing Dependencies'),
-      '#description' => t('These modules are missing one or more dependencies,
-        and so cannot be enabled.'),
-      '#markup' => theme('table', array('header' => $headers, 'rows' => $missing)),
-      '#weight' => 2,
-    );
-  }
-
+  
   return $form;
 }
 

@@ -284,6 +284,10 @@ function _project_browser_is_project_enabled($type, $name) {
       $themes = list_themes();
       return isset($themes[$name]);
       break;
+    case 'layout':
+      $layout = layout_load($name);
+      return !empty($layout);
+      break;
   }
   return FALSE;
 }
