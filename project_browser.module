@@ -362,12 +362,13 @@ function project_browser_preprocess_project_browser_list(&$variables) {
 function project_browser_preprocess_project_browser_project(&$variables) {
   module_load_include('inc', 'project_browser', 'project_browser');
   $project = $variables['project'];
+  $project_image = project_browser_project_image($project['image'], $project['type']);
 
   $variables['title'] = l($project['title'], check_url($project['project url']),
   	array('attributes' => array('target' => '_blank'), 'html' => TRUE));
   $variables['author'] = t('Author: @author', array('@author' => $project['author']));
   $variables['description'] = _filter_htmlcorrector(filter_xss($project['description']));
-  $variables['image'] = $project['image'];
+  $variables['image'] = $project_image;
   $variables['last_updated'] = ($project['last updated']) ? t('Last Updated: @date', array('@date' => format_date($project['last updated'], 'long'))) : '';
 
   $extras = array();
@@ -431,6 +432,13 @@ function project_browser_add_remove_queue_link($project_name, $title = NULL, $id
   );
 
   return backdrop_render($build);
+}
+
+function project_browser_project_image($image, $type) {
+  if(!$image) {
+    $image = base_path() . backdrop_get_path('module', 'project_browser') . '/images/' . $type . '-icon.png';
+  }
+  return $image;
 }
 
 /**
