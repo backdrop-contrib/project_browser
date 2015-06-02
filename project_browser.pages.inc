@@ -18,6 +18,10 @@ function project_browser_page($type) {
   backdrop_add_library('project_browser', 'multiselect');
   backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_more_link.js');
   backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js');
+  
+  // Show a warning if no zip extension available, but allow to browse and
+  // select to view available releases. Install blocked on select versions page.
+  $zip_loaded = project_browser_check_zip_loaded();
 
   // Set any filters in the session that are needed.
   if (isset($_GET['repository'])) {
@@ -175,6 +179,8 @@ function project_browser_installation_select_versions_page() {
 function project_browser_installation_select_versions_form($form, &$form_state, $projects) {
   module_load_include('inc', 'project_browser', 'project_browser');
   backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/select_releases.js');
+  
+  $zip_loaded = project_browser_check_zip_loaded();
 
   $form = array();
 
@@ -286,6 +292,7 @@ function project_browser_installation_select_versions_form($form, &$form_state, 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Install'),
+    '#disabled' => !$zip_loaded,
   );
 
   return $form;
