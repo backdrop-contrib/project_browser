@@ -13,19 +13,6 @@
  */
 
 /**
- * Implements hook_help().
- */
-function project_browser_help($path, $arg) {
-  $output = '';
-  switch ($path) {
-    case "admin/help#project_browser":
-      $output .= '<p>' . t("Provides a UI for users to browse for and install new modules and themes from within their Backdrop admin interface.") . '</p>';
-      break;
-  }
-  return $output;
-}
-
-/**
  * Implements hook_permission().
  */
 function project_browser_permission() {
@@ -460,15 +447,6 @@ function project_browser_library_info() {
     ),
   );
   return $libraries;
-}
-
-/**
- * Implements hook_autoload_info().
- */
-function project_browser_autoload_info(){
- return array(
-   'ProjectBrowserAdministrationTestCase' => 'project_browser.test',
- );
 }
 
 /**
