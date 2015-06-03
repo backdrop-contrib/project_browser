@@ -96,8 +96,8 @@ a.show-more {
 }
 
 .project-image img {
-  max-height: 150px;
-  max-width: 200px;
+  /* max-height: 150px; */
+  max-width: 100px;
 }
 
 #project-browser-main ul, #project-browser-main ol {
