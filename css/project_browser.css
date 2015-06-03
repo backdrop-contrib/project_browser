@@ -152,6 +152,11 @@ div.project-title {
   font-size: 18px;
 }
 
+.ui-dialog .project-title {
+  font-size: 1.385em;
+  font-weight: bold;
+}
+
 fieldset#edit-category,
 fieldset#edit-version  {
   border: none;
@@ -204,4 +209,8 @@ div.install-item-prefix {
 
 .ui-dialog.project-dialog {
   max-width:95%;
+}
+
+.project-description {
+  margin-top: 1em;
 }

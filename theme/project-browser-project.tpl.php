@@ -33,16 +33,8 @@ $class = ($first) ? 'project-item-first' : 'project-item';
     <div class="project-title">
       <?php print $title; ?>
     </div>
-    
-    <div class="project-author">
-      <?php print $author; ?>
-    </div>
-    
-    <div class="project-updated">
-      <?php print $last_updated; ?>
-    </div>
-    
-    <div class="project-description">
+        
+    <div class="project-description description">
       <?php print $description; ?>
     </div>
   </div>

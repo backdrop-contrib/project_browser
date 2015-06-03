@@ -382,7 +382,7 @@ function project_browser_preprocess_project_browser_list(&$variables) {
 function project_browser_preprocess_project_browser_project_dialog(&$variables) {
   project_browser_preprocess_project_browser_project($variables);
   $project = $variables['project'];
-  $variables['description'] = _filter_htmlcorrector(filter_xss($project['description']));
+  $variables['description'] = _filter_htmlcorrector(filter_xss($project['description'], array('h2')));
 }
 
 /**
@@ -442,15 +442,15 @@ function project_browser_preprocess_project_browser_project(&$variables) {
 function theme_project_browser_project_description($variables) {
   $project = $variables['project'];
   $form['project_description'] = array(
-    '#markup' => truncate_utf8(_filter_htmlcorrector(filter_xss($project['description'])), 150, TRUE, TRUE),
+    '#markup' => truncate_utf8(strip_tags(_filter_htmlcorrector(filter_xss($project['description']))), 100, TRUE, TRUE, 25),
   );
   $form['project_dialog_link'] = array(
     '#type' => 'link',
     '#href' => 'admin/modules/project-browser/project/' . $project['name'],
-    '#title' => t('Configure'),
-    '#value' => t('Configure'),
+    '#title' => t('details'),
+    '#value' => t('details'),
     '#attributes' => array(
-      'class' => array('use-ajax'),
+      'class' => array('use-ajax more-link'),
       'data-dialog' => 'true',
       'data-dialog-options' => json_encode(array('width' => 700, 'dialogClass' => 'project-dialog')),
     ),
