@@ -16,7 +16,6 @@
 function project_browser_page($type) {
   module_load_include('inc', 'project_browser', 'project_browser');
   backdrop_add_library('project_browser', 'multiselect');
-  backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_more_link.js');
   backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js');
 
   // Set any filters in the session that are needed.
