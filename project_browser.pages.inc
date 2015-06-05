@@ -16,7 +16,6 @@
 function project_browser_page($type) {
   module_load_include('inc', 'project_browser', 'project_browser');
   backdrop_add_library('project_browser', 'multiselect');
-  backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_more_link.js');
   backdrop_add_js(backdrop_get_path('module', 'project_browser') . '/js/project_browser_multiselect.js');
   
   // Show a warning if no zip extension available, but allow to browse and
@@ -127,6 +126,23 @@ function project_browser_page($type) {
   }
 
   return $build;
+}
+
+/**
+ * Page to display individual projects in a modal.
+ *
+ * @param $project
+ *   The project name.
+ *
+ * @return
+ *   Render array of a themed project.
+ */
+function project_browser_project_display($project) {
+  $projects = $_SESSION['project_browser_listed_projects'];
+  $form['project_dialog'] = array(
+    '#markup' => theme('project_browser_project_dialog', array('project' => $projects[$project])),
+  );
+  return $form;
 }
 
 /**

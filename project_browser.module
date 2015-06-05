@@ -57,6 +57,16 @@ function project_browser_menu() {
     'file' => 'project_browser.pages.inc',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+  
+  $items['admin/modules/project-browser/project/%'] = array(
+    'title' => 'Modules',
+    'description' => 'Project details',
+    'page callback' => 'project_browser_project_display',
+    'page arguments' => array(4),
+    'access arguments' => array('use project browser'),
+    'file' => 'project_browser.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
 
   $items['admin/modules/project-browser/themes'] = array(
     'title' => 'Themes',
@@ -214,6 +224,16 @@ function project_browser_theme($existing, $type, $theme, $path) {
       'path' => $path . '/theme',
       'template' => 'project-browser-project',
     ),
+    // Template for project description.
+    'project_browser_project_description' => array(
+      'render element' => 'description',
+    ),
+    // Template for project details dialog.
+    'project_browser_project_dialog' => array(
+      'variables' => array('project' => NULL),
+      'path' => $path . '/theme',
+      'template' => 'project-browser-project-dialog',
+    ),
     // Template for install queue item.
     'project_browser_install_queue' => array(
       'variables' => array('projects' => NULL),
@@ -340,6 +360,19 @@ function project_browser_preprocess_project_browser_list(&$variables) {
 }
 
 /**
+ * Add some variables for the project details dialog.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *     - project : associative array of project variables.
+ */
+function project_browser_preprocess_project_browser_project_dialog(&$variables) {
+  project_browser_preprocess_project_browser_project($variables);
+  $project = $variables['project'];
+  $variables['description'] = _filter_htmlcorrector(filter_xss($project['description'], array('h2')));
+}
+
+/**
  * Add some variables for the project theme.
  *
  * @param $variables
@@ -354,8 +387,8 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   $variables['title'] = l($project['title'], check_url($project['project url']),
   	array('attributes' => array('target' => '_blank'), 'html' => TRUE));
   $variables['author'] = t('Author: @author', array('@author' => $project['author']));
-  $variables['description'] = _filter_htmlcorrector(filter_xss($project['description']));
   $variables['image'] = $project_image;
+  $variables['description'] = theme('project_browser_project_description', array('project' => $project));
   $variables['last_updated'] = ($project['last updated']) ? t('Last Updated: @date', array('@date' => format_date($project['last updated'], 'long'))) : '';
 
   $extras = array();
@@ -389,6 +422,28 @@ function project_browser_preprocess_project_browser_project(&$variables) {
     $variables['status'] = '';
     $variables['install'] = project_browser_add_remove_queue_link($project['name']);
   }
+}
+
+/**
+ * Builds the truncated description on the project list.
+ */
+function theme_project_browser_project_description($variables) {
+  $project = $variables['project'];
+  $form['project_description'] = array(
+    '#markup' => truncate_utf8(strip_tags(_filter_htmlcorrector(filter_xss($project['description']))), 100, TRUE, TRUE, 25),
+  );
+  $form['project_dialog_link'] = array(
+    '#type' => 'link',
+    '#href' => 'admin/modules/project-browser/project/' . $project['name'],
+    '#title' => t('details'),
+    '#value' => t('details'),
+    '#attributes' => array(
+      'class' => array('use-ajax more-link'),
+      'data-dialog' => 'true',
+      'data-dialog-options' => json_encode(array('width' => 700, 'dialogClass' => 'project-dialog')),
+    ),
+  );
+  return backdrop_render($form);
 }
 
 /**

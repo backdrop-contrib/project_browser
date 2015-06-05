@@ -2,10 +2,9 @@
 /**
  * @file
  * 
- * Default theme implementation for displaying a project.
+ * Default theme implementation for displaying a project in a dialog.
  * 
  * Available variables:
- * - $first: Whether or not this project item is the first one in the list
  * - $image: The project image, if any
  * - $title: The title of the project
  * - $author: Ther author of the project
@@ -17,12 +16,10 @@
  * These are defined in project_browser_preprocess_project_browser_project()
  * 
  * @see project_browser_preprocess_project_browser_project()
- */
-
-$class = ($first) ? 'project-item-first' : 'project-item';
- 
+ */ 
 ?>
-<div class="<?php print $class; ?>">
+
+<div class="project-item">
   <?php if ($image) { ?>
     <div class='project-image'>
       <img src='<?php print $image; ?>' />
@@ -33,8 +30,16 @@ $class = ($first) ? 'project-item-first' : 'project-item';
     <div class="project-title">
       <?php print $title; ?>
     </div>
-        
-    <div class="project-description description">
+    
+    <div class="project-author">
+      <?php print $author; ?>
+    </div>
+    
+    <div class="project-updated">
+      <?php print $last_updated; ?>
+    </div>
+    
+    <div class="project-description">
       <?php print $description; ?>
     </div>
   </div>
@@ -45,7 +50,6 @@ $class = ($first) ? 'project-item-first' : 'project-item';
   
   <div class="project-status">
       <?php print $status; ?>
-     	<?php print $install; ?>
   </div>
   <div class='clearfix'></div>
 </div>
