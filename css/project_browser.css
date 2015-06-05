@@ -211,6 +211,15 @@ div.install-item-prefix {
   max-width:95%;
 }
 
-.project-description {
+.project-dialog-description {
   margin-top: 1em;
+}
+
+.project-dialog-info {
+  float: left;
+}
+
+.project-dialog-image {
+  float: right;
+  max-width: 294px;
 }

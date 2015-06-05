@@ -20,28 +20,31 @@
 ?>
 
 <div class="project-item">
-  <?php if ($image) { ?>
-    <div class='project-image'>
-      <img src='<?php print $image; ?>' />
+  <div class="project-dialog-header clearfix" >
+    <div class="project-dialog-info" >
+      <div class="project-title">
+        <?php print $title; ?>
+      </div>
+      
+      <div class="project-author">
+        <?php print $author; ?>
+      </div>
+      
+      <div class="project-updated">
+        <?php print $last_updated; ?>
+      </div>
+      
     </div>
-  <?php } ?>
+    
+    <?php if ($image) { ?>
+      <div class='project-dialog-image'>
+        <img src='<?php print $image; ?>' />
+      </div>
+    <?php } ?>
+  </div>
   
-  <div class="project-information" >
-    <div class="project-title">
-      <?php print $title; ?>
-    </div>
-    
-    <div class="project-author">
-      <?php print $author; ?>
-    </div>
-    
-    <div class="project-updated">
-      <?php print $last_updated; ?>
-    </div>
-    
-    <div class="project-description">
-      <?php print $description; ?>
-    </div>
+  <div class="project-dialog-description">
+    <?php print $description; ?>
   </div>
   
   <div class="project-extra">
