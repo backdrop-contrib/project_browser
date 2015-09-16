@@ -195,7 +195,7 @@ function project_browser_filters_form_submit($form, &$form_state) {
  *
  * @param string $type
  *   The type of project to get the categories for. Example: 'module' or
- *   'theme'.
+ *   'theme' or 'layout'.
  *
  * @return
  *   Array containing all available categories or FALSE if no categories.
@@ -238,7 +238,7 @@ function project_browser_get_categories($type) {
  * @param $raw_cats
  *   An array of categories from $form_state['values'].
  * @param $type
- *   The type of project to prepare the categories for, eg 'module' or 'theme'.
+ *   The type of project to prepare the categories for, eg 'module' or 'theme' or 'layout'.
  */
 function project_browser_prepare_categories($raw_cats, $type) {
   $categories = project_browser_fetch_categories($type);
@@ -268,7 +268,7 @@ function project_browser_prepare_categories($raw_cats, $type) {
  * Checks if a project is enabled.
  *
  * @param string $type
- *   The type of project. Could be 'theme' or 'module'.
+ *   The type of project. Could be 'theme' or 'module' or 'layout'.
  * @param string $name
  *   The short name of the project.
  *
@@ -283,6 +283,10 @@ function _project_browser_is_project_enabled($type, $name) {
     case 'theme':
       $themes = list_themes();
       return isset($themes[$name]);
+      break;
+    case 'layout':
+      $layout = layout_load($name);
+      return !empty($layout);
       break;
   }
   return FALSE;
@@ -480,6 +484,7 @@ function project_browser_fetch_results($filters) {
       }
 
       $query_url = $url . '/query/' . $local_filters['type'] . '/1?' . http_build_query($local_filters, FALSE, '&');
+      dpm($query_url);
       $response = backdrop_http_request($query_url);
 
       if ($response->code == '200') {

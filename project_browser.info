@@ -1,5 +1,5 @@
 name = Project Browser
-description = A Project Browser that allows users to browse for and install modules and themes from their Backdrop site admin area
+description = A Project Browser that allows users to browse for and install modules, themes and layouts from their Backdrop site admin area
 backdrop = 1.x
 dependencies[] = update
 files[] = project_browser.test
