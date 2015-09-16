@@ -39,6 +39,7 @@ $class = ($first) ? 'project-item-first' : 'project-item';
     </div>
   </div>
   
+  <div class="project-extras">
   <div class="project-extra">
     <?php print $extras; ?>
   </div>
@@ -46,6 +47,7 @@ $class = ($first) ? 'project-item-first' : 'project-item';
   <div class="project-status">
       <?php print $status; ?>
      	<?php print $install; ?>
+  </div>
   </div>
   <div class='clearfix'></div>
 </div>

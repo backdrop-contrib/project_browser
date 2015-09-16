@@ -92,6 +92,7 @@ a.show-more {
 
 .project-image {
   float: left;
+  flex: 0 1 auto;
   margin-right: 10px;
 }
 
@@ -111,21 +112,28 @@ a.show-more {
   position: relative;
 }
 
+.project-browser-block  .project-item {
+  display: flex;
+}
+
 .project-item-first {
   clear: both;
   padding: 10px;
   position: relative;
+  display: flex;
 }
 
 div.project-status {
-  position: absolute;
-  right: 10px;
-  text-align: right;
-  top: 5px;
 }
 
 div.project-information {
+  flex: 0 1 auto;
   
+}
+
+.project-extras {
+  flex: 0 1 auto;
+  min-width: 200px;
 }
 
 .project-browser-install-main {
