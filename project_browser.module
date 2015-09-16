@@ -384,8 +384,18 @@ function project_browser_preprocess_project_browser_project(&$variables) {
   $project = $variables['project'];
   $project_image = project_browser_project_image($project['image'], $project['type']);
 
-  $variables['title'] = l($project['title'], check_url($project['project url']),
-  	array('attributes' => array('target' => '_blank'), 'html' => TRUE));
+  $variables['title'] = l(
+    $project['title'], 
+    'admin/modules/project-browser/project/' . $project['name'],
+    array(
+      'attributes' => array(
+        'class' => array('use-ajax'),
+        'id' => 'title-ajax',
+        'data-dialog' => 'true',
+        'data-dialog-options' => json_encode(array('width' => 700, 'dialogClass' => 'project-dialog')),
+      ), 
+    )
+  ); 
   $variables['author'] = t('Author: @author', array('@author' => $project['author']));
   $variables['image'] = $project_image;
   $variables['description'] = theme('project_browser_project_description', array('project' => $project));
@@ -428,9 +438,11 @@ function project_browser_preprocess_project_browser_project(&$variables) {
  * Builds the truncated description on the project list.
  */
 function theme_project_browser_project_description($variables) {
+  backdrop_add_library('system', 'backdrop.ajax');
+
   $project = $variables['project'];
   $form['project_description'] = array(
-    '#markup' => truncate_utf8(strip_tags(_filter_htmlcorrector(filter_xss($project['description']))), 100, TRUE, TRUE, 25),
+    '#markup' => truncate_utf8(strip_tags(_filter_htmlcorrector(filter_xss($project['description']))), 280, TRUE, TRUE, 150),
   );
   $form['project_dialog_link'] = array(
     '#type' => 'link',
@@ -439,6 +451,7 @@ function theme_project_browser_project_description($variables) {
     '#value' => t('details'),
     '#attributes' => array(
       'class' => array('use-ajax more-link'),
+      'id' => array('title-link'),
       'data-dialog' => 'true',
       'data-dialog-options' => json_encode(array('width' => 700, 'dialogClass' => 'project-dialog')),
     ),
