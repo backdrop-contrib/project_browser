@@ -2,7 +2,7 @@
  "_config_name": "project_browser.settings",
  "project_browser_servers": "",
  "project_browser_default_server": {
-   "http://www.moneyscripts.net/project_browser/server": {
+   "https://projects.backdropcms.org": {
      "name": "Backdrop",
      "method": "json"
    }

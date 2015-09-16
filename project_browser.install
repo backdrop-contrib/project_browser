@@ -11,7 +11,20 @@
 function project_browser_install() {
   $config = config('project_browser.settings');
   $config->set('project_browser_servers', '');
-  $config->set('project_browser_default_server', array('http://www.moneyscripts.net/project_browser/server' => array(
+  $config->set('project_browser_default_server', array('https://projects.backdropcms.org' => array(
+      'name' => 'Backdrop',
+      'method' => 'json',
+    ),
+  ));
+  $config->save();
+}
+
+/**
+ * Update default server.
+ */
+function project_browser_update_1000() {
+  $config = config('project_browser.settings');
+  $config->set('project_browser_default_server', array('https://projects.backdropcms.org' => array(
       'name' => 'Backdrop',
       'method' => 'json',
     ),
