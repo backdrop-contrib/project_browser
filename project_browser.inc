@@ -69,7 +69,7 @@ function project_browser_filters_form($form, &$form_state, $type) {
 /**
  * Returns a themed sort widget for the filters.
  */
-function project_browser_get_sort_widget($sort_options, $current_order_by, $current_sort) {
+function project_browser_get_sort_widget($sort_options, $current_order, $current_sort) {
   $sort_list = array();
   $sort_list[] = array('data' => t('Sort by:'), 'class' => array('sort-header'));
   $current_path = backdrop_get_path_alias($_GET['q']);
@@ -77,12 +77,12 @@ function project_browser_get_sort_widget($sort_options, $current_order_by, $curr
   foreach ($sort_options as $sort_option) {
     $classes = array();
     $query = array(
-      'order_by' => $sort_option['method'],
+      'order' => $sort_option['method'],
       'sort' => $sort_option['default_sort'],
     );
 
     // If the sort option is currently active, handle it differently.
-    if ($current_order_by == $sort_option['method']) {
+    if ($current_order == $sort_option['method']) {
       $classes[] = 'sort-active';
       $classes[] = 'sort-' . $current_sort;
 
@@ -394,7 +394,7 @@ function project_browser_get_queued_releases() {
  *   'categories' => array() // The categories that were selected, if any
  *   'type' => 'module', // The type of project being searched
  *   'page' => 3, // The zero-based page number
- *   'requested' => 12, // How many results are requested per page
+ *   'items_per_page' => 12, // How many results are requested per page
  * )
  *
  * The project_browser_fetch_results($filters) call returns an array like this:
@@ -450,7 +450,7 @@ function project_browser_fetch_results($filters) {
 
     // We are not using this right now because we only expect to handle 1 server
     // at a time currently.
-    // $local_filters['requested'] = floor($filters['requested'] / count($servers));
+    // $local_filters['items_per_page'] = floor($filters['items_per_page'] / count($servers));
 
     // Send only the relevant categories to the server.
     if (isset($filters['categories'])) {

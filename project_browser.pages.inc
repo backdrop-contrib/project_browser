@@ -26,8 +26,8 @@ function project_browser_page($type) {
   if (isset($_GET['repository'])) {
     $_SESSION['project_browser_sever_filter'] = $_GET['repository'];
   }
-  if (isset($_GET['order_by'])) {
-    $_SESSION['project_browser_order_by_filter_' . $type] = $_GET['order_by'];
+  if (isset($_GET['order'])) {
+    $_SESSION['project_browser_order_filter_' . $type] = $_GET['order'];
   }
   if (isset($_GET['sort'])) {
     $_SESSION['project_browser_sort_filter_' . $type] = $_GET['sort'];
@@ -50,8 +50,8 @@ function project_browser_page($type) {
   if (isset($_SESSION['project_browser_text_filter_' . $type])) {
     $filters['text'] = $_SESSION['project_browser_text_filter_' . $type];
   }
-  if (isset($_SESSION['project_browser_order_by_filter_' . $type])) {
-    $filters['order_by'] = $_SESSION['project_browser_order_by_filter_' . $type];
+  if (isset($_SESSION['project_browser_order_filter_' . $type])) {
+    $filters['order'] = $_SESSION['project_browser_order_filter_' . $type];
   }
   if (isset($_SESSION['project_browser_sort_filter_' . $type])) {
     $filters['sort'] = $_SESSION['project_browser_sort_filter_' . $type];
@@ -62,7 +62,7 @@ function project_browser_page($type) {
   else {
     $filters['server'] = 0;
   }
-  $filters['requested'] = 10;
+  $filters['items_per_page'] = 10;
   $filters['page'] = isset($_GET['page']) ? $_GET['page'] : 0;
 
   // Get the projects to display here based on the filters.
@@ -90,7 +90,7 @@ function project_browser_page($type) {
   }
 
   $sort_options = project_browser_get_sort_options();
-  $current_order_by = isset($_SESSION['project_browser_order_by_filter_' . $type]) ? $_SESSION['project_browser_order_by_filter_' . $type] : 'score';
+  $current_order = isset($_SESSION['project_browser_order_filter_' . $type]) ? $_SESSION['project_browser_order_filter_' . $type] : 'score';
   $current_sort = isset($_SESSION['project_browser_sort_filter_' . $type]) ? $_SESSION['project_browser_sort_filter_' . $type] : 'desc';;
 
   $build = array();
@@ -103,7 +103,7 @@ function project_browser_page($type) {
     'project_browser_sort_header' => array(
       '#type' => 'item',
       '#weight' => 2,
-      '#markup' => project_browser_get_sort_widget($sort_options, $current_order_by, $current_sort),
+      '#markup' => project_browser_get_sort_widget($sort_options, $current_order, $current_sort),
     ),
     'project_browser_list' => array(
       '#markup' => theme('project_browser_list', array('projects_list' => $list, 'type' => $type)),
