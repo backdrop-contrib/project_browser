@@ -1,3 +1,6 @@
+NOTICE!! Project Browser is being merged into Backdrop core! No further development will happen on this contrib port. Please track any progress on the merge and report any issues to: https://github.com/backdrop/backdrop-issues/issues/1399**
+---------------------------
+
 Project Browser
 =====
 
