@@ -1,17 +1,15 @@
-NOTICE!! Project Browser is being merged into Backdrop core! No further development will happen on this contrib port. Please track any progress on the merge and report any issues to: https://github.com/backdrop/backdrop-issues/issues/1399
+NOTICE!! The Project Browser module has been merged into Backdrop core in version 1.4.0! No further development will happen on this contrib port. More information: https://github.com/backdrop/backdrop-issues/issues/1399
 ---------------------------
 
 Project Browser
 =====
 
-
-
 Installation
 ------------
 
-- Install this module using the official Backdrop CMS instructions at
-  https://backdropcms.org/guide/modules
-
+Nothing to do. Merged into Backdrop core as installer.module since 1.4.0.
+- ~~Install this module using the official Backdrop CMS instructions at
+  https://backdropcms.org/guide/modules~~
 
 License
 -------
